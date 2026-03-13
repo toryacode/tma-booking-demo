@@ -16,3 +16,11 @@ export const getMyBookings = async () => {
   const response = await axios.get(`${API_BASE}/bookings/my`, { headers });
   return response.data;
 };
+
+export const getEmployeeSlots = async (employeeId: number, serviceId: number, date: string) => {
+  const response = await axios.get(`${API_BASE}/slots`, {
+    headers,
+    params: { employee_id: employeeId, service_id: serviceId, date },
+  });
+  return response.data;
+};

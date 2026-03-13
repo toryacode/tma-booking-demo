@@ -7,7 +7,7 @@ export const getTelegramUser = () => {
 };
 
 export const closeWebApp = () => {
-  if (window.Telegram?.WebApp) {
+  if (window.Telegram?.WebApp?.close) {
     window.Telegram.WebApp.close();
   }
 };
