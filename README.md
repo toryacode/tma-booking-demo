@@ -1,6 +1,5 @@
 # Beauty Salon TMA 🛍️💅
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python](https://img.shields.io/badge/Python-3.11-blue.svg)](https://www.python.org/)
 [![React](https://img.shields.io/badge/React-18.2.0-blue.svg)](https://reactjs.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104.1-green.svg)](https://fastapi.tiangolo.com/)
@@ -86,7 +85,7 @@ Beauty Salon TMA is a full-stack web application that allows users to book beaut
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/beauty-salon-tma.git
+   git clone https://github.com/toryacode/beauty-salon-tma.git
    cd beauty-salon-tma
    ```
 
@@ -248,24 +247,9 @@ npm test
 - Write comprehensive tests
 - Update documentation
 
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
 ## 🙏 Acknowledgments
 
 - [FastAPI](https://fastapi.tiangolo.com/) for the excellent web framework
 - [React](https://reactjs.org/) for the frontend library
 - [Telegram](https://telegram.org/) for the platform
 - [Directus](https://directus.io/) for the admin panel
-
-## 📞 Support
-
-For questions or issues:
-- Open an issue on GitHub
-- Contact: your.email@example.com
-
----
-
-**Demo Project**: This is a portfolio demonstration project showcasing full-stack development skills. Not intended for production use without further security and performance optimizations.
-- Bot: `cd bot && python bot.py`
