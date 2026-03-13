@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: beauty_salon
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    volumes:
+      - ./docker/volumes/postgres:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+
+  backend:
+    build: ./backend
+    environment:
+      - DATABASE_URL=postgresql://user:password@postgres:5432/beauty_salon
+      - SECRET_KEY=your_secret_key
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+
+  bot:
+    build: ./bot
+    environment:
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+    depends_on:
+      - backend
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+
+  directus:
+    image: directus/directus:latest
+    environment:
+      - KEY=your_directus_key
+      - SECRET=your_directus_secret
+      - DB_CLIENT=pg
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_DATABASE=beauty_salon
+      - DB_USER=user
+      - DB_PASSWORD=password
+      - ADMIN_EMAIL=admin@example.com
+      - ADMIN_PASSWORD=admin
+    ports:
+      - "8055:8055"
+    depends_on:
+      - postgres
