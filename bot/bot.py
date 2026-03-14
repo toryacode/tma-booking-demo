@@ -1,20 +1,23 @@
+import asyncio
+import logging
+import socket
+import aiohttp
+
 from aiogram import Bot, Dispatcher
 from aiogram.types import Message, WebAppInfo, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.filters import Command
-import asyncio
-import logging
-import aiohttp
 from aiogram.client.session.aiohttp import AiohttpSession
 
 from config import BOT_TOKEN, WEBAPP_URL
 
 logging.basicConfig(level=logging.INFO)
 
-session = AiohttpSession(
-    timeout=aiohttp.ClientTimeout(total=60)
-)
+# FORCE IPV4 (FIX TIMEOUT)
+connector = aiohttp.TCPConnector(family=socket.AF_INET)
+client_session = aiohttp.ClientSession(connector=connector)
 
-bot = Bot(token=BOT_TOKEN, session=session)
+bot_session = AiohttpSession(session=client_session)
+bot = Bot(token=BOT_TOKEN, session=bot_session)
 
 dp = Dispatcher()
 
@@ -41,3 +44,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+    
