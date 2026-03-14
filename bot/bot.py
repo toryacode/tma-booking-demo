@@ -33,7 +33,10 @@ async def start_command(message: Message):
 
 
 async def main():
-    await dp.start_polling(bot)
+    await dp.start_polling(
+        bot,
+        polling_timeout=10
+    )
 
 
 if __name__ == "__main__":
