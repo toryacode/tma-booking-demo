@@ -1,0 +1,6 @@
+{
+  "python.defaultInterpreterPath": "./backend/.venv/bin/python",
+  "python.linting.enabled": true,
+  "python.linting.pylintEnabled": true,
+  "typescript.preferences.importModuleSpecifier": "relative"
+}
