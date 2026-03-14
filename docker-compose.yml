@@ -31,7 +31,6 @@ services:
     build: ./bot
     env_file:
       - .env
-    network_mode: host
     environment:
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
     depends_on:
