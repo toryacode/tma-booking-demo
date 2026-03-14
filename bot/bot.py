@@ -1,3 +1,9 @@
+import socket
+original_getaddrinfo = socket.getaddrinfo
+def getaddrinfo_ipv4_only(host, port, *args, **kwargs):
+    return [ai for ai in original_getaddrinfo(host, port, *args, **kwargs) if ai[0] == socket.AF_INET]
+socket.getaddrinfo = getaddrinfo_ipv4_only
+
 from aiogram import Bot, Dispatcher
 from aiogram.types import Message, WebAppInfo, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.filters import Command
