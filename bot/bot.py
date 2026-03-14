@@ -3,15 +3,13 @@ from aiogram.types import Message, WebAppInfo, InlineKeyboardMarkup, InlineKeybo
 from aiogram.filters import Command
 import asyncio
 import logging
-import aiohttp
+from aiogram.client.session.aiohttp import AiohttpSession
 from config import BOT_TOKEN, WEBAPP_URL
 
 logging.basicConfig(level=logging.INFO)
 
-http_timeout = aiohttp.ClientTimeout(total=15)
-http_session = aiohttp.ClientSession(timeout=http_timeout)
-
-bot = Bot(token=BOT_TOKEN, session=http_session)
+bot_session = AiohttpSession(timeout=15)
+bot = Bot(token=BOT_TOKEN, session=bot_session)
 dp = Dispatcher()
 
 @dp.message(Command("start"))
