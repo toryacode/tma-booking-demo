@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE = (import.meta as any).env?.VITE_API_BASE_URL || '/api';
+const API_BASE = (import.meta as any).env?.VITE_API_BASE_URL || `${window.location.origin}/api`;
 
 // Assume user_id is from Telegram
 const userId = '123456789'; // Replace with actual Telegram user ID

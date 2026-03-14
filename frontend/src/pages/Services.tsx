@@ -18,11 +18,15 @@ const Services = () => {
 
   useEffect(() => {
     setLoading(true);
+    console.log('Services: fetching', { apiBase: (window.location.origin + '/api') });
     getServices()
-      .then(setServices)
+      .then(data => {
+        console.log('Services: response', data);
+        setServices(data);
+      })
       .catch(err => {
         console.error('Failed to fetch services', err);
-        setError('Unable to load services, check API or network.');
+        setError('Unable to load services. Please check API path and network (open devtools console).');
       })
       .finally(() => setLoading(false));
   }, []);
