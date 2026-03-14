@@ -16,9 +16,12 @@ function AppRouter() {
     const telegramUserId = params.get('telegram_user_id');
 
     if (telegramUserId) {
+      console.log('Telegram login hook detected user id', telegramUserId);
       loginWithTelegram(telegramUserId)
         .then(data => {
+          console.log('login success', data);
           setAccessToken(data.access_token);
+          localStorage.setItem('tma_user_id', telegramUserId);
           const u = new URL(window.location.href);
           u.searchParams.delete('telegram_user_id');
           window.history.replaceState({}, document.title, u.toString());
@@ -26,6 +29,9 @@ function AppRouter() {
         .catch(err => {
           console.error('Telegram login failed', err);
         });
+    } else {
+      const token = localStorage.getItem('tma_access_token');
+      console.log('No telegram user id query, token exists?', Boolean(token), token && token.slice(0, 10));
     }
   }, [location.search]);
 

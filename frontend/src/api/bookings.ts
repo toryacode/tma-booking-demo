@@ -9,6 +9,11 @@ const getAuthHeaders = () => {
     return { Authorization: `Bearer ${token}` };
   }
 
+  const userId = localStorage.getItem('tma_user_id');
+  if (userId) {
+    return { 'user-id': userId };
+  }
+
   // Legacy fallback for development
   return { 'user-id': '123456789' };
 };
