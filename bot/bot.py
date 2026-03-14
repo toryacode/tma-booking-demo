@@ -4,12 +4,14 @@ from aiogram.filters import Command
 import asyncio
 import logging
 import socket
+import aiohttp
 from aiogram.client.session.aiohttp import AiohttpSession
 from config import BOT_TOKEN, WEBAPP_URL
 
 logging.basicConfig(level=logging.INFO)
 
-bot_session = AiohttpSession(timeout=60, connector_kwargs={"family": socket.AF_INET})
+bot_connector = aiohttp.TCPConnector(family=socket.AF_INET)
+bot_session = AiohttpSession(timeout=60, connector=bot_connector)
 bot = Bot(token=BOT_TOKEN, session=bot_session)
 dp = Dispatcher()
 
