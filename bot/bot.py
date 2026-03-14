@@ -3,11 +3,15 @@ from aiogram.types import Message, WebAppInfo, InlineKeyboardMarkup, InlineKeybo
 from aiogram.filters import Command
 import asyncio
 import logging
+import aiohttp
 from config import BOT_TOKEN, WEBAPP_URL
 
 logging.basicConfig(level=logging.INFO)
 
-bot = Bot(token=BOT_TOKEN)
+http_timeout = aiohttp.ClientTimeout(total=15)
+http_session = aiohttp.ClientSession(timeout=http_timeout)
+
+bot = Bot(token=BOT_TOKEN, session=http_session)
 dp = Dispatcher()
 
 @dp.message(Command("start"))
@@ -19,7 +23,22 @@ async def start_command(message: Message):
     await message.answer("Welcome to Beauty Salon Booking!", reply_markup=keyboard)
 
 async def main():
-    await dp.start_polling(bot)
+    backoff = 1
+    try:
+        while True:
+            try:
+                logging.info("Bot starting polling...")
+                await dp.start_polling(bot)
+            except Exception as exc:
+                logging.error("Bot polling failed: %s", exc, exc_info=True)
+                logging.info("Retrying polling in %s seconds", backoff)
+                await asyncio.sleep(backoff)
+                backoff = min(backoff * 2, 60)
+            else:
+                logging.info("Bot polling ended cleanly; restarting")
+                backoff = 1
+    finally:
+        await bot.session.close()
 
 if __name__ == "__main__":
     asyncio.run(main())
