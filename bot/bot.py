@@ -8,7 +8,11 @@ from config import BOT_TOKEN, WEBAPP_URL
 
 logging.basicConfig(level=logging.INFO)
 
-bot = Bot(token=BOT_TOKEN)
+bot = Bot(
+    token=BOT_TOKEN,
+    request_timeout=60
+)
+
 dp = Dispatcher()
 
 
@@ -29,27 +33,7 @@ async def start_command(message: Message):
 
 
 async def main():
-    backoff = 1
-
-    try:
-        while True:
-            try:
-                logging.info("Bot starting polling...")
-                await dp.start_polling(bot)
-
-            except Exception as exc:
-                logging.error("Bot polling failed: %s", exc, exc_info=True)
-                logging.info("Retrying polling in %s seconds", backoff)
-
-                await asyncio.sleep(backoff)
-                backoff = min(backoff * 2, 60)
-
-            else:
-                logging.info("Bot polling ended cleanly; restarting")
-                backoff = 1
-
-    finally:
-        await bot.session.close()
+    await dp.start_polling(bot)
 
 
 if __name__ == "__main__":
