@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 from app.db.session import SessionLocal
 from app.models.employee import Employee
 from app.models.service import Service
@@ -42,13 +42,38 @@ def seed_demo_data():
 
     db.commit()
 
-    # Keep relations: employee1 has service2, employee2 has service1
-    if len(employees) >= 1 and len(services) >= 2:
+    # Connect employees and services by relationship table (employee_services)
+    if len(employees) >= 3 and len(services) >= 3:
+        # Alice: Haircut and Manicure
+        if services[0] not in employees[0].services:
+            employees[0].services.append(services[0])
         if services[1] not in employees[0].services:
             employees[0].services.append(services[1])
-    if len(employees) >= 2 and len(services) >= 1:
-        if services[0] not in employees[1].services:
-            employees[1].services.append(services[0])
+
+        # Bob: Manicure
+        if services[1] not in employees[1].services:
+            employees[1].services.append(services[1])
+
+        # Charlie: Massage
+        if services[2] not in employees[2].services:
+            employees[2].services.append(services[2])
+
+    db.commit()
+
+    # Add schedule for each employee (Mon-Fri 09:00 - 17:00)
+    for employee in employees:
+        for weekday in range(5):
+            schedule_exists = db.query(Schedule).filter(
+                Schedule.employee_id == employee.id,
+                Schedule.weekday == weekday
+            ).first()
+            if not schedule_exists:
+                db.add(Schedule(
+                    employee_id=employee.id,
+                    weekday=weekday,
+                    start_time=time(9, 0),
+                    end_time=time(17, 0)
+                ))
 
     db.commit()
 
