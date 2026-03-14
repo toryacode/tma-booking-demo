@@ -22,3 +22,11 @@ def get_service_employees(service_id: int, db: Session = Depends(get_db)):
     if not service:
         raise HTTPException(status_code=404, detail="Service not found")
     return service.employees
+
+
+@router.get("/services/{service_id}", response_model=ServiceSchema)
+def get_service(service_id: int, db: Session = Depends(get_db)):
+    service = db.query(Service).filter(Service.id == service_id).first()
+    if not service:
+        raise HTTPException(status_code=404, detail="Service not found")
+    return service

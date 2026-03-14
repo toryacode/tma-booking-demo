@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings
 from pydantic import field_validator
+from typing import Optional
 
 
 class Settings(BaseSettings):
@@ -7,6 +8,7 @@ class Settings(BaseSettings):
     secret_key: str = "changeme"
     telegram_bot_token: str = ""
     telegram_bot_username: str = ""
+    telegram_default_chat_id: Optional[str] = None
 
     class Config:
         env_file = ".env"

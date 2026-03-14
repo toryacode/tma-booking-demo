@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from datetime import datetime, timedelta
 from app.models.booking import Booking
 from app.models.service import Service
@@ -22,7 +22,9 @@ def create_booking(db: Session, booking: BookingCreate):
     db_booking = Booking(**booking.dict())
     db.add(db_booking)
     db.commit()
-    db.refresh(db_booking)
+
+    # Load relations for response
+    db_booking = db.query(Booking).options(joinedload(Booking.service), joinedload(Booking.employee)).get(db_booking.id)
 
     # Schedule reminder
     reminder_time = db_booking.start_time - timedelta(minutes=15)
@@ -74,4 +76,4 @@ def reschedule_booking(db: Session, booking_id: int, user_id: str, new_start_tim
 
 
 def get_user_bookings(db: Session, user_id: str):
-    return db.query(Booking).filter(Booking.user_id == user_id).all()
+    return db.query(Booking).options(joinedload(Booking.service), joinedload(Booking.employee)).filter(Booking.user_id == user_id).all()

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { getEmployeeSlots, createBooking } from '../api/bookings';
+import { getServiceById } from '../api/services';
 
 const Booking = () => {
   const navigate = useNavigate();
@@ -12,6 +13,19 @@ const Booking = () => {
   const [selectedSlot, setSelectedSlot] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [bookingLoading, setBookingLoading] = useState(false);
+  const [service, setService] = useState<{ duration: number; price: number; name: string } | null>(null);
+
+  useEffect(() => {
+    if (serviceId) {
+      getServiceById(serviceId)
+        .then(setService)
+        .catch(err => {
+          console.error('Failed to fetch service info', err);
+          setError('Could not load service details.');
+        });
+    }
+  }, [serviceId]);
 
   useEffect(() => {
     if (date) {
@@ -33,9 +47,16 @@ const Booking = () => {
       return;
     }
 
+    if (!service) {
+      setError('Service data is not loaded yet.');
+      return;
+    }
+
     setError('');
+    setBookingLoading(true);
+
     const startTime = new Date(selectedSlot);
-    const durationMinutes = 60; // by default; could be derived from service later
+    const durationMinutes = service.duration;
     const endTime = new Date(startTime.getTime() + durationMinutes * 60000);
 
     try {
@@ -53,6 +74,8 @@ const Booking = () => {
       console.error(error);
       const backendMessage = error?.response?.data?.detail;
       setError(backendMessage ? `Booking failed: ${backendMessage}` : 'Booking failed. Please try again.');
+    } finally {
+      setBookingLoading(false);
     }
   };
 
@@ -94,8 +117,12 @@ const Booking = () => {
             )}
           </div>
 
-          <button onClick={handleBook} className="w-full rounded-2xl bg-blue-600 px-4 py-2 text-white font-semibold transition hover:bg-blue-700">
-            Confirm Booking
+          <button
+            onClick={handleBook}
+            disabled={bookingLoading}
+            className={`w-full rounded-2xl px-4 py-2 text-white font-semibold transition ${bookingLoading ? 'bg-slate-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
+          >
+            {bookingLoading ? 'Booking...' : 'Confirm Booking'}
           </button>
         </div>
       </div>

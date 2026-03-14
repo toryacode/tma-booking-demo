@@ -11,3 +11,8 @@ export const getServiceEmployees = async (serviceId: number) => {
   const response = await axios.get(`${API_BASE}/services/${serviceId}/employees`);
   return response.data;
 };
+
+export const getServiceById = async (serviceId: number) => {
+  const response = await axios.get(`${API_BASE}/services/${serviceId}`);
+  return response.data;
+};
