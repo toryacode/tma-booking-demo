@@ -32,13 +32,23 @@ const Booking = () => {
       setError('Please select a slot before booking.');
       return;
     }
+
     setError('');
     const startTime = new Date(selectedSlot);
-    const endTime = new Date(startTime.getTime() + 60 * 60 * 1000);
+    const durationMinutes = 60; // by default; could be derived from service later
+    const endTime = new Date(startTime.getTime() + durationMinutes * 60000);
+
     try {
-      await createBooking({ service_id: serviceId, employee_id: employeeId, start_time: startTime.toISOString(), end_time: endTime.toISOString() });
-      alert('Booking created!');
-      navigate('/history');
+      const booking = await createBooking({
+        service_id: serviceId,
+        employee_id: employeeId,
+        start_time: startTime.toISOString(),
+        end_time: endTime.toISOString(),
+      });
+
+      navigate('/success', {
+        state: { booking },
+      });
     } catch (error: any) {
       console.error(error);
       const backendMessage = error?.response?.data?.detail;

@@ -4,6 +4,7 @@ import Services from './pages/Services';
 import Employees from './pages/Employees';
 import Booking from './pages/Booking';
 import History from './pages/History';
+import Success from './pages/Success';
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
           <Route path="/services" element={<Services />} />
           <Route path="/employees" element={<Employees />} />
           <Route path="/booking" element={<Booking />} />
+          <Route path="/success" element={<Success />} />
           <Route path="/history" element={<History />} />
         </Routes>
       </div>

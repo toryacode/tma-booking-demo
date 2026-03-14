@@ -48,8 +48,8 @@ const History = () => {
           <div className="space-y-4">
             {bookings.map(booking => (
               <div key={booking.id} className="rounded-3xl bg-white p-5 shadow-lg">
-                <h2 className="text-xl font-semibold text-slate-800">{booking.service.name}</h2>
-                <p className="text-slate-500">with {booking.employee.name}</p>
+                <h2 className="text-xl font-semibold text-slate-800">{booking.service?.name || 'Unknown Service'}</h2>
+                <p className="text-slate-500">with {booking.employee?.name || 'Unknown Specialist'}</p>
                 <p className="mt-1 text-slate-500">{new Date(booking.start_time).toLocaleString()}</p>
                 <span className="mt-3 inline-block rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-600">{booking.status}</span>
               </div>
