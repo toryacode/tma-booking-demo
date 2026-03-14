@@ -6,10 +6,17 @@ from app.models.employee import Employee
 from app.schemas.booking import BookingCreate
 from app.core.scheduler import schedule_reminder
 from app.services.reminder_service import send_booking_confirmation
+from app.services.slot_service import is_slot_available
 
 
 def create_booking(db: Session, booking: BookingCreate):
-    # Check for conflicts
+    service = db.query(Service).filter(Service.id == booking.service_id).first()
+    if not service:
+        raise ValueError('Service not found')
+
+    if not is_slot_available(db, booking.employee_id, service.duration, booking.start_time, booking.start_time.date()):
+        raise ValueError('Selected slot is not available')
+
     conflict = db.query(Booking).filter(
         Booking.employee_id == booking.employee_id,
         Booking.start_time < booking.end_time,
