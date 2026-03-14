@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE = 'http://localhost:8000/api';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 
 // Assume user_id is from Telegram
 const userId = '123456789'; // Replace with actual Telegram user ID
@@ -18,9 +18,9 @@ export const getMyBookings = async () => {
 };
 
 export const getEmployeeSlots = async (employeeId: number, serviceId: number, date: string) => {
-  const response = await axios.get(`${API_BASE}/slots`, {
+  const response = await axios.get(`${API_BASE}/employees/${employeeId}/slots`, {
     headers,
-    params: { employee_id: employeeId, service_id: serviceId, date },
+    params: { service_id: serviceId, date },
   });
   return response.data;
 };
