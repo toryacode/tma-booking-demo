@@ -9,6 +9,9 @@ import time
 from sqlalchemy import text
 from sqlalchemy.exc import OperationalError
 
+# Import all models so tables are registered in metadata before create_all
+import app.models
+
 app = FastAPI(title="Beauty Salon Booking API")
 
 app.add_middleware(

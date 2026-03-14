@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from app.db.session import SessionLocal
 from app.models.employee import Employee
 from app.models.service import Service
+from app.models.schedule import Schedule
 from app.models.booking import Booking
 
 
