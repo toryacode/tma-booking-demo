@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { getServices } from '../api/services';
 
 interface Service {
@@ -11,6 +11,7 @@ interface Service {
 }
 
 const Services = () => {
+  const navigate = useNavigate();
   const [services, setServices] = useState<Service[]>([]);
 
   useEffect(() => {
@@ -19,6 +20,9 @@ const Services = () => {
 
   return (
     <div className="container mx-auto p-4">
+      <button onClick={() => navigate(-1)} className="mb-4 text-blue-500 hover:underline">
+        ← Back
+      </button>
       <h1 className="text-2xl font-bold mb-4">Services</h1>
       <div className="grid grid-cols-1 gap-4">
         {services.map(service => (

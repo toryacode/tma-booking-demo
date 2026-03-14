@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getMyBookings } from '../api/bookings';
 
 interface Booking {
@@ -10,6 +11,7 @@ interface Booking {
 }
 
 const History = () => {
+  const navigate = useNavigate();
   const [bookings, setBookings] = useState<Booking[]>([]);
 
   useEffect(() => {
@@ -18,6 +20,9 @@ const History = () => {
 
   return (
     <div className="container mx-auto p-4">
+      <button onClick={() => navigate(-1)} className="mb-4 text-blue-500 hover:underline">
+        ← Back
+      </button>
       <h1 className="text-2xl font-bold mb-4">My Bookings</h1>
       <div className="space-y-4">
         {bookings.map(booking => (

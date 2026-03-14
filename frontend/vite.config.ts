@@ -7,7 +7,6 @@ export default defineConfig({
   preview: {
     host: '0.0.0.0',
     port: 3000,
-    strict: false,
     allowedHosts: ['tma.triniss.ru', 'localhost', '127.0.0.1'],
   },
   build: {
