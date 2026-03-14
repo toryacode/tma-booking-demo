@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Header
 from pydantic import BaseModel
 from app.core.security import create_access_token, verify_token
 
-router = APIRouter()
+router = APIRouter(prefix="/auth")
 
 
 class LoginRequest(BaseModel):
