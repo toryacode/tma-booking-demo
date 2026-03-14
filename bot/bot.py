@@ -3,22 +3,25 @@ from aiogram.types import Message, WebAppInfo, InlineKeyboardMarkup, InlineKeybo
 from aiogram.filters import Command
 import asyncio
 import logging
+import aiohttp
+from aiogram.client.session.aiohttp import AiohttpSession
 
 from config import BOT_TOKEN, WEBAPP_URL
 
 logging.basicConfig(level=logging.INFO)
 
-bot = Bot(
-    token=BOT_TOKEN,
-    request_timeout=60
+session = AiohttpSession(
+    timeout=aiohttp.ClientTimeout(total=60)
 )
+
+bot = Bot(token=BOT_TOKEN, session=session)
 
 dp = Dispatcher()
 
 
 @dp.message(Command("start"))
 async def start_command(message: Message):
-    login_url = f"{WEBAPP_URL}?telegram_user_id={message.from_user.id}"
+    login_url = f"{WEBAPP_URL}?telegram_user_id={message.from_user.id}
 
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
