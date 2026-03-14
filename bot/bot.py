@@ -12,8 +12,9 @@ dp = Dispatcher()
 
 @dp.message(Command("start"))
 async def start_command(message: Message):
+    login_url = f"{WEBAPP_URL}?telegram_user_id={message.from_user.id}"
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="Open Booking App", web_app=WebAppInfo(url=WEBAPP_URL))]
+        [InlineKeyboardButton(text="Open Booking App", web_app=WebAppInfo(url=login_url))]
     ])
     await message.answer("Welcome to Beauty Salon Booking!", reply_markup=keyboard)
 

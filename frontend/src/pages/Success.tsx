@@ -40,8 +40,11 @@ const Success = () => {
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white py-8">
       <div className="mx-auto max-w-3xl px-4">
         <div className="rounded-3xl bg-white p-8 shadow-lg">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-green-100 text-green-600">
-            ✅
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-green-600">
+            <svg viewBox="0 0 24 24" className="h-8 w-8 text-white" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="12" r="11" stroke="white" strokeWidth="2" fill="transparent" />
+              <path d="M7.5 12.5L10.75 15.75L16.5 9.99999" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
           </div>
           <h1 className="text-3xl font-bold text-slate-800">Booking Confirmed!</h1>
           <p className="mt-2 text-slate-500">Your appointment has been scheduled successfully.</p>
