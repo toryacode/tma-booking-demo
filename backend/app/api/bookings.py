@@ -20,6 +20,8 @@ def create_new_booking(
     db: Session = Depends(get_db),
     user_id: str = Depends(get_current_user)
 ):
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Missing user-id header")
     booking.user_id = user_id
     try:
         return create_booking(db, booking)

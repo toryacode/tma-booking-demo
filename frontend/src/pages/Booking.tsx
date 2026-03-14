@@ -39,9 +39,10 @@ const Booking = () => {
       await createBooking({ service_id: serviceId, employee_id: employeeId, start_time: startTime.toISOString(), end_time: endTime.toISOString() });
       alert('Booking created!');
       navigate('/history');
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      setError('Booking failed. Please try again.');
+      const backendMessage = error?.response?.data?.detail;
+      setError(backendMessage ? `Booking failed: ${backendMessage}` : 'Booking failed. Please try again.');
     }
   };
 

@@ -11,7 +11,7 @@ class BookingBase(BaseModel):
 
 
 class BookingCreate(BookingBase):
-    user_id: str
+    user_id: Optional[str] = None
 
 
 class BookingUpdate(BaseModel):
