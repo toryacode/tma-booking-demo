@@ -22,4 +22,5 @@ def start_scheduler():
 
 
 def shutdown_scheduler():
-    scheduler.shutdown()
+    if scheduler.running:
+        scheduler.shutdown()
