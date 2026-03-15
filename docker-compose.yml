@@ -33,6 +33,7 @@ services:
       - .env
     environment:
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_SOCKS_LINK=${TELEGRAM_SOCKS_LINK:-https://t.me/socks?server=94.228.123.201&port=1080&user=tgproxy&pass=VMf-945-nuI-k}
     depends_on:
       - backend
 

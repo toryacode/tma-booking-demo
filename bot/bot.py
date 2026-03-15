@@ -5,16 +5,22 @@ def getaddrinfo_ipv4_only(host, port, *args, **kwargs):
 socket.getaddrinfo = getaddrinfo_ipv4_only
 
 from aiogram import Bot, Dispatcher
+from aiogram.client.session.aiohttp import AiohttpSession
 from aiogram.types import Message, WebAppInfo, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.filters import Command
 import asyncio
 import logging
 
-from config import BOT_TOKEN, WEBAPP_URL
+from config import BOT_TOKEN, WEBAPP_URL, TELEGRAM_PROXY_URL
 
 logging.basicConfig(level=logging.INFO)
 
-bot = Bot(token=BOT_TOKEN)
+if TELEGRAM_PROXY_URL:
+    logging.info("Using Telegram proxy for bot API traffic")
+    session = AiohttpSession(proxy=TELEGRAM_PROXY_URL)
+    bot = Bot(token=BOT_TOKEN, session=session)
+else:
+    bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
 
