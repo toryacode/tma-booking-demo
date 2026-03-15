@@ -22,6 +22,8 @@ services:
       - SECRET_KEY=${SECRET_KEY:-your_secret_key}
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - TELEGRAM_BOT_USERNAME=${TELEGRAM_BOT_USERNAME}
+      - TELEGRAM_SOCKS_LINK=${TELEGRAM_SOCKS_LINK:-https://t.me/socks?server=94.228.123.201&port=1080&user=tgproxy&pass=VMf-945-nuI-k}
+      - TELEGRAM_REQUEST_TIMEOUT_SECONDS=${TELEGRAM_REQUEST_TIMEOUT_SECONDS:-15}
     ports:
       - "8000:8000"
     depends_on:
