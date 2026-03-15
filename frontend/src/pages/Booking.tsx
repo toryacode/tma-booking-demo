@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { getEmployeeSlots, createBooking } from '../api/bookings';
 import { getServiceById } from '../api/services';
+import { getEmployeeById } from '../api/employees';
 
 const Booking = () => {
   const navigate = useNavigate();
@@ -13,8 +14,10 @@ const Booking = () => {
   const [selectedSlot, setSelectedSlot] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [autoDateLoading, setAutoDateLoading] = useState(false);
   const [bookingLoading, setBookingLoading] = useState(false);
   const [service, setService] = useState<{ duration: number; price: number; name: string } | null>(null);
+  const [employee, setEmployee] = useState<{ name: string; bio?: string; avatar?: string } | null>(null);
 
   useEffect(() => {
     if (serviceId) {
@@ -28,9 +31,63 @@ const Booking = () => {
   }, [serviceId]);
 
   useEffect(() => {
+    if (employeeId) {
+      getEmployeeById(employeeId)
+        .then(setEmployee)
+        .catch(err => {
+          console.error('Failed to fetch employee info', err);
+        });
+    }
+  }, [employeeId]);
+
+  useEffect(() => {
+    if (!serviceId || !employeeId || date) {
+      return;
+    }
+
+    let active = true;
+    const findClosestDateWithSlots = async () => {
+      setAutoDateLoading(true);
+      setError('');
+
+      try {
+        const today = new Date();
+        for (let dayOffset = 0; dayOffset < 45; dayOffset += 1) {
+          const candidate = new Date(today);
+          candidate.setDate(today.getDate() + dayOffset);
+          const candidateDate = candidate.toISOString().slice(0, 10);
+          const data = await getEmployeeSlots(employeeId, serviceId, candidateDate);
+          if (!active) return;
+
+          if ((data.slots || []).length > 0) {
+            setDate(candidateDate);
+            return;
+          }
+        }
+
+        setError('No available slots found for the upcoming period.');
+      } catch (err) {
+        if (!active) return;
+        console.error('Failed to auto-select date', err);
+      } finally {
+        if (active) {
+          setAutoDateLoading(false);
+        }
+      }
+    };
+
+    void findClosestDateWithSlots();
+
+    return () => {
+      active = false;
+    };
+  }, [serviceId, employeeId, date]);
+
+  useEffect(() => {
     if (date) {
       setLoading(true);
       setError('');
+      setSelectedSlot('');
       getEmployeeSlots(employeeId, serviceId, date)
         .then(data => setSlots(data.slots || []))
         .catch(err => {
@@ -95,11 +152,31 @@ const Booking = () => {
         </div>
 
         <div className="rounded-3xl bg-white p-6 shadow-lg dark:bg-slate-800">
+          {employee && (
+            <div className="mb-5 rounded-2xl border border-slate-200 p-4 dark:border-slate-700">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Expert</p>
+              <div className="mt-3 flex items-center gap-3">
+                {employee.avatar ? (
+                  <img src={employee.avatar} alt={employee.name} className="h-12 w-12 rounded-full object-cover" />
+                ) : (
+                  <div className="h-12 w-12 rounded-full bg-slate-300 text-slate-700 flex items-center justify-center font-semibold dark:bg-slate-600 dark:text-slate-200">
+                    {employee.name?.charAt(0).toUpperCase() || 'E'}
+                  </div>
+                )}
+                <div>
+                  <p className="font-semibold text-slate-800 dark:text-slate-100">{employee.name}</p>
+                  {employee.bio && <p className="text-sm text-slate-500 dark:text-slate-300">{employee.bio}</p>}
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="mb-5">
             <label className="block text-sm font-medium text-slate-600 mb-2 dark:text-slate-300">Select Date</label>
-            <input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-2 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+            <input type="date" value={date} onChange={e => setDate(e.target.value)} className="block w-full min-w-0 max-w-full rounded-xl border border-slate-200 px-3 py-2 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
           </div>
 
+          {autoDateLoading && <p className="text-slate-500 mb-3 dark:text-slate-300">Finding nearest available date...</p>}
           {loading && <p className="text-slate-500 mb-3 dark:text-slate-300">Searching slots...</p>}
           {error && <p className="text-rose-500 mb-3">{error}</p>}
 

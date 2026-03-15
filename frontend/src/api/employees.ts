@@ -8,3 +8,8 @@ export const getEmployeeSlots = async (employeeId: number, serviceId: number, da
   });
   return response.data;
 };
+
+export const getEmployeeById = async (employeeId: number) => {
+  const response = await axios.get(`${API_BASE}/employees/${employeeId}`);
+  return response.data;
+};
