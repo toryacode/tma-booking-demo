@@ -49,37 +49,82 @@ function AppRouter() {
       }
     }
 
-    const bootstrapAuth = async () => {
+    let cancelled = false;
+
+    const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+    const tryTelegramLogin = async () => {
       const token = getAccessToken();
-      if (!token) {
-        const initData = window.Telegram?.WebApp?.initData;
-        if (initData) {
-          try {
-            const data = await loginWithTelegramInitData(initData);
-            setAccessToken(data.access_token);
-          } catch (err) {
-            console.error('Telegram initData login failed', err);
-          }
-        }
+      if (token) {
+        return true;
       }
 
-      const finalToken = getAccessToken();
-      if (!finalToken) {
-        setCurrentUser(null);
-        return;
+      const initData = window.Telegram?.WebApp?.initData;
+      if (!initData) {
+        return false;
+      }
+
+      try {
+        const data = await loginWithTelegramInitData(initData);
+        setAccessToken(data.access_token);
+        return true;
+      } catch (err) {
+        console.error('Telegram initData login failed', err);
+        return false;
+      }
+    };
+
+    const tryLoadCurrentUser = async () => {
+      const token = getAccessToken();
+      if (!token) {
+        return false;
       }
 
       try {
         const me = await getCurrentUser();
-        setCurrentUser(me);
-      } catch (err) {
+        if (!cancelled) {
+          setCurrentUser(me);
+        }
+        return true;
+      } catch (err: any) {
         console.error('Failed to get current user', err);
-        clearAccessToken();
+        if (err?.response?.status === 401) {
+          clearAccessToken();
+        }
+        return false;
+      }
+    };
+
+    const bootstrapAuth = async () => {
+      const MAX_ATTEMPTS = 5;
+      const RETRY_DELAY_MS = 1000;
+
+      for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt += 1) {
+        if (cancelled) {
+          return;
+        }
+
+        await tryTelegramLogin();
+        const loaded = await tryLoadCurrentUser();
+        if (loaded) {
+          return;
+        }
+
+        if (attempt < MAX_ATTEMPTS - 1) {
+          await wait(RETRY_DELAY_MS);
+        }
+      }
+
+      if (!cancelled) {
         setCurrentUser(null);
       }
     };
 
     void bootstrapAuth();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
