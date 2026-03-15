@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { getMyBookings } from '../api/bookings';
+import BookingStatusChip from '../components/booking/BookingStatusChip';
 
 interface Booking {
   id: number;
@@ -137,9 +138,9 @@ const History = () => {
                         <h3 className="text-xl font-semibold text-slate-800 dark:text-slate-100">{booking.service?.name || 'Unknown Service'}</h3>
                         <p className="text-slate-500 dark:text-slate-300">with {booking.employee?.name || 'Unknown Specialist'}</p>
                         <p className="mt-1 text-slate-500 dark:text-slate-300">{new Date(booking.start_time).toLocaleString()}</p>
-                        <span className="mt-3 inline-block rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-600">
-                          {booking.status}
-                        </span>
+                        <div className="mt-3">
+                          <BookingStatusChip status={booking.status} />
+                        </div>
                       </Link>
                     ))}
                   </div>
