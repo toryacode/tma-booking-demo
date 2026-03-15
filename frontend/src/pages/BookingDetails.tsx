@@ -72,6 +72,7 @@ const BookingDetails = () => {
   const start = booking ? new Date(booking.start_time) : null;
   const end = booking?.end_time ? new Date(booking.end_time) : null;
   const canCancel = booking?.status === 'scheduled' || booking?.status === 'upcoming';
+  const canReschedule = booking?.status === 'scheduled' || booking?.status === 'upcoming';
   const normalizedEmployeeAvatar = normalizeImageUrl(booking?.employee?.avatar);
 
   useEffect(() => {
@@ -178,14 +179,25 @@ const BookingDetails = () => {
               <p className="mt-4 text-rose-500">{cancelError}</p>
             )}
 
-            {canCancel && !confirmCancelOpen && (
-              <button
-                onClick={() => setConfirmCancelOpen(true)}
-                className="mt-5 rounded-2xl bg-rose-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-rose-700"
-              >
-                Cancel Booking
-              </button>
-            )}
+            <div className="mt-5 flex flex-wrap gap-2">
+              {canReschedule && !confirmCancelOpen && (
+                <button
+                  onClick={() => navigate(`/bookings/${booking.id}/reschedule`, { state: { booking } })}
+                  className="rounded-2xl bg-blue-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+                >
+                  Reschedule
+                </button>
+              )}
+
+              {canCancel && !confirmCancelOpen && (
+                <button
+                  onClick={() => setConfirmCancelOpen(true)}
+                  className="rounded-2xl bg-rose-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-rose-700"
+                >
+                  Cancel Booking
+                </button>
+              )}
+            </div>
 
             {confirmCancelOpen && (
               <div className="mt-5 rounded-2xl border border-rose-200 bg-rose-50 p-4 dark:border-rose-900/40 dark:bg-rose-900/20">

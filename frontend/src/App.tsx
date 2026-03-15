@@ -6,6 +6,7 @@ import Services from './pages/Services';
 import Employees from './pages/Employees';
 import Booking from './pages/Booking';
 import BookingDetails from './pages/BookingDetails';
+import Reschedule from './pages/Reschedule';
 import History from './pages/History';
 import Success from './pages/Success';
 import Profile from './pages/Profile';
@@ -215,6 +216,7 @@ function AppRouter() {
         <Route path="/employees" element={<Employees />} />
         <Route path="/booking" element={<Booking />} />
         <Route path="/bookings/:bookingId" element={<BookingDetails />} />
+        <Route path="/bookings/:bookingId/reschedule" element={<Reschedule />} />
         <Route path="/success" element={<Success />} />
         <Route path="/history" element={<History />} />
         <Route path="/profile" element={<Profile user={currentUser} />} />

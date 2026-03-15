@@ -98,6 +98,7 @@ def reschedule_booking(db: Session, booking_id: int, user_id: str, new_start_tim
     db.commit()
 
     # Reschedule lifecycle jobs and reminder
+    cancel_booking_lifecycle_jobs(booking.id)
     schedule_booking_lifecycle(booking.id, booking.start_time, booking.end_time)
     
     return booking

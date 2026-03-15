@@ -30,6 +30,18 @@ export const cancelBooking = async (bookingId: number) => {
   return response.data;
 };
 
+export const rescheduleBooking = async (bookingId: number, newStartTime: string, newEndTime: string) => {
+  const headers = getAuthHeaders();
+  const response = await axios.post(`${API_BASE}/bookings/${bookingId}/reschedule`, null, {
+    headers,
+    params: {
+      new_start_time: newStartTime,
+      new_end_time: newEndTime,
+    },
+  });
+  return response.data;
+};
+
 export const getEmployeeSlots = async (employeeId: number, serviceId: number, date: string) => {
   const headers = getAuthHeaders();
   const response = await axios.get(`${API_BASE}/employees/${employeeId}/slots`, {

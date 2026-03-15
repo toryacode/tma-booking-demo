@@ -1,6 +1,7 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { normalizeImageUrl } from '../utils/image';
+import { cancelBooking } from '../api/bookings';
 
 type BookingSuccessState = {
   booking: {
@@ -17,13 +18,36 @@ const Success = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const state = location.state as BookingSuccessState | null;
-  const booking = state?.booking;
+  const [booking, setBooking] = useState(state?.booking ?? null);
   const normalizedEmployeeAvatar = normalizeImageUrl(booking?.employee?.avatar);
   const [employeeAvatarError, setEmployeeAvatarError] = useState(false);
+  const [cancelLoading, setCancelLoading] = useState(false);
+  const [cancelError, setCancelError] = useState('');
 
   useEffect(() => {
     setEmployeeAvatarError(false);
   }, [normalizedEmployeeAvatar]);
+
+  const canCancel = booking?.status === 'scheduled' || booking?.status === 'upcoming';
+
+  const handleCancel = async () => {
+    if (!booking || !canCancel) {
+      return;
+    }
+
+    setCancelError('');
+    setCancelLoading(true);
+    try {
+      const updated = await cancelBooking(booking.id);
+      setBooking(updated);
+    } catch (err: any) {
+      console.error('Failed to cancel booking from success page', err);
+      const backendMessage = err?.response?.data?.detail;
+      setCancelError(backendMessage || 'Failed to cancel booking.');
+    } finally {
+      setCancelLoading(false);
+    }
+  };
 
   if (!booking) {
     return (
@@ -112,9 +136,26 @@ const Success = () => {
             </p>
           </div>
 
-          <button onClick={() => navigate('/history')} className="mt-6 rounded-2xl bg-green-600 px-5 py-2 text-white hover:bg-green-700">
-            View My Bookings
-          </button>
+          {cancelError && <p className="mt-4 text-rose-500">{cancelError}</p>}
+
+          <div className="mt-6 flex flex-wrap gap-2">
+            <button
+              onClick={() => navigate('/history')}
+              className="rounded-2xl bg-green-600 px-5 py-2 text-white hover:bg-green-700"
+            >
+              View My Bookings
+            </button>
+
+            {canCancel && (
+              <button
+                onClick={handleCancel}
+                disabled={cancelLoading}
+                className={`rounded-2xl px-5 py-2 text-white ${cancelLoading ? 'cursor-not-allowed bg-rose-400' : 'bg-rose-600 hover:bg-rose-700'}`}
+              >
+                {cancelLoading ? 'Cancelling...' : 'Cancel Booking'}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>
