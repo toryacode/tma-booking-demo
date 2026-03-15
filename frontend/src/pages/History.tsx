@@ -41,7 +41,19 @@ const History = () => {
       .finally(() => setLoading(false));
   }, []);
 
-  const sortedBookings = [...bookings].sort((a, b) => new Date(b.start_time).getTime() - new Date(a.start_time).getTime());
+  const now = Date.now();
+  const sortedBookings = [...bookings].sort((a, b) => {
+    const aTime = new Date(a.start_time).getTime();
+    const bTime = new Date(b.start_time).getTime();
+    const aDistance = Math.abs(aTime - now);
+    const bDistance = Math.abs(bTime - now);
+
+    if (aDistance !== bDistance) {
+      return aDistance - bDistance;
+    }
+
+    return aTime - bTime;
+  });
 
   const sections: BookingSection[] = [
     {
