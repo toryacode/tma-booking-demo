@@ -20,7 +20,7 @@ dp = Dispatcher()
 
 @dp.message(Command("start"))
 async def start_command(message: Message):
-    login_url = f"{WEBAPP_URL}?telegram_user_id={message.from_user.id}"
+    login_url = WEBAPP_URL
    
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[

@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     telegram_bot_token: str = ""
     telegram_bot_username: str = ""
     telegram_default_chat_id: Optional[str] = None
+    telegram_init_data_ttl_seconds: int = 600
 
     class Config:
         env_file = ".env"

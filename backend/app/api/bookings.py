@@ -12,10 +12,8 @@ router = APIRouter()
 
 
 def get_current_user(
-    authorization: Optional[str] = Header(None),
-    user_id: Optional[str] = Header(None, alias="user-id")
+    authorization: Optional[str] = Header(None)
 ):
-    # Token-based auth takes precedence
     if authorization:
         scheme, _, token = authorization.partition(" ")
         if scheme.lower() == "bearer" and token:
@@ -24,11 +22,7 @@ def get_current_user(
                 return payload["sub"]
             raise HTTPException(status_code=401, detail="Invalid authentication token")
 
-    # Fallback to direct user-id header for compatibility
-    if user_id:
-        return user_id
-
-    raise HTTPException(status_code=401, detail="Unauthorized: user-id or bearer token required")
+    raise HTTPException(status_code=401, detail="Unauthorized: bearer token required")
 
 
 @router.post("/bookings", response_model=BookingSchema)
@@ -38,7 +32,7 @@ def create_new_booking(
     user_id: str = Depends(get_current_user)
 ):
     if not user_id:
-        raise HTTPException(status_code=401, detail="Missing user-id header")
+        raise HTTPException(status_code=401, detail="Missing authenticated user")
     booking.user_id = user_id
     try:
         return create_booking(db, booking)

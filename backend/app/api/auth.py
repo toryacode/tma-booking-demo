@@ -1,12 +1,13 @@
 from fastapi import APIRouter, HTTPException, Header
 from pydantic import BaseModel
 from app.core.security import create_access_token, verify_token
+from app.core.telegram_auth import validate_and_extract_user, TelegramInitDataError
 
 router = APIRouter(prefix="/auth")
 
 
 class LoginRequest(BaseModel):
-    telegram_user_id: str
+    init_data: str
 
 
 class LoginResponse(BaseModel):
@@ -16,15 +17,27 @@ class LoginResponse(BaseModel):
 
 @router.post("/login", response_model=LoginResponse)
 def login(request: LoginRequest):
-    if not request.telegram_user_id:
-        raise HTTPException(status_code=400, detail="telegram_user_id is required")
+    if not request.init_data:
+        raise HTTPException(status_code=400, detail="init_data is required")
 
-    access_token = create_access_token({"sub": request.telegram_user_id})
+    try:
+        validated = validate_and_extract_user(request.init_data)
+    except TelegramInitDataError as exc:
+        raise HTTPException(status_code=401, detail=str(exc)) from exc
+
+    user = validated["user"]
+    user_id = str(user["id"])
+
+    access_token = create_access_token(
+        {
+            "sub": user_id,
+            "first_name": user.get("first_name"),
+            "last_name": user.get("last_name"),
+            "username": user.get("username"),
+            "photo_url": user.get("photo_url"),
+        }
+    )
     return {"access_token": access_token, "token_type": "bearer"}
-
-
-from fastapi import Depends, Header
-from app.core.security import verify_token
 
 
 @router.get("/me")
@@ -35,5 +48,11 @@ def me(authorization: str = Header(...)):
     payload = verify_token(token)
     if not payload or "sub" not in payload:
         raise HTTPException(status_code=401, detail="Invalid token")
-    return {"telegram_user_id": payload["sub"]}
+    return {
+        "telegram_user_id": payload["sub"],
+        "first_name": payload.get("first_name"),
+        "last_name": payload.get("last_name"),
+        "username": payload.get("username"),
+        "photo_url": payload.get("photo_url"),
+    }
 
