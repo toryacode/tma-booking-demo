@@ -2,6 +2,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { normalizeImageUrl } from '../utils/image';
 import { cancelBooking } from '../api/bookings';
+import BookingStatusChip from '../components/booking/BookingStatusChip';
 
 type BookingSuccessState = {
   booking: {
@@ -23,6 +24,7 @@ const Success = () => {
   const [employeeAvatarError, setEmployeeAvatarError] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
   const [cancelError, setCancelError] = useState('');
+  const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
 
   useEffect(() => {
     setEmployeeAvatarError(false);
@@ -40,6 +42,7 @@ const Success = () => {
     try {
       const updated = await cancelBooking(booking.id);
       setBooking(updated);
+      setConfirmCancelOpen(false);
     } catch (err: any) {
       console.error('Failed to cancel booking from success page', err);
       const backendMessage = err?.response?.data?.detail;
@@ -90,8 +93,15 @@ const Success = () => {
             </svg>
           </div>
             <div>
-              <p className="text-xl font-semibold text-slate-800 dark:text-slate-100">{booking.service?.name || 'Service'}</p>
-              <p className="text-slate-500 dark:text-slate-300">Your appointment has been scheduled successfully.</p>
+              <div className="flex items-center gap-2">
+                <p className="text-xl font-semibold text-slate-800 dark:text-slate-100">{booking.service?.name || 'Service'}</p>
+                <BookingStatusChip status={booking.status} />
+              </div>
+              <p className="text-slate-500 dark:text-slate-300">
+                {booking.status === 'cancelled' || booking.status === 'canceled'
+                  ? 'This appointment was cancelled.'
+                  : 'Your appointment has been scheduled successfully.'}
+              </p>
             </div>
           </div>
 
@@ -146,16 +156,41 @@ const Success = () => {
               View My Bookings
             </button>
 
-            {canCancel && (
+            {canCancel && !confirmCancelOpen && (
               <button
-                onClick={handleCancel}
+                onClick={() => setConfirmCancelOpen(true)}
                 disabled={cancelLoading}
                 className={`rounded-2xl px-5 py-2 text-white ${cancelLoading ? 'cursor-not-allowed bg-rose-400' : 'bg-rose-600 hover:bg-rose-700'}`}
               >
-                {cancelLoading ? 'Cancelling...' : 'Cancel Booking'}
+                Cancel Booking
               </button>
             )}
           </div>
+
+          {confirmCancelOpen && (
+            <div className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 p-4 dark:border-rose-900/40 dark:bg-rose-900/20">
+              <p className="text-sm font-semibold text-rose-700 dark:text-rose-200">Are you sure you want to cancel this booking?</p>
+              <div className="mt-3 flex gap-2">
+                <button
+                  onClick={handleCancel}
+                  disabled={cancelLoading}
+                  className={`rounded-xl px-4 py-2 text-sm font-semibold text-white ${cancelLoading ? 'bg-rose-400 cursor-not-allowed' : 'bg-rose-600 hover:bg-rose-700'}`}
+                >
+                  {cancelLoading ? 'Cancelling...' : 'Confirm'}
+                </button>
+                <button
+                  onClick={() => {
+                    setConfirmCancelOpen(false);
+                    setCancelError('');
+                  }}
+                  disabled={cancelLoading}
+                  className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                >
+                  Back
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
