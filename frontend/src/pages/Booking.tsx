@@ -60,6 +60,8 @@ const Booking = () => {
           if (!active) return;
 
           if ((data.slots || []).length > 0) {
+            setSlots(data.slots || []);
+            setSelectedSlot('');
             setDate(candidateDate);
             return;
           }
