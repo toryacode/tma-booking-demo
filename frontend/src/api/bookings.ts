@@ -24,6 +24,12 @@ export const getMyBookings = async () => {
   return response.data;
 };
 
+export const cancelBooking = async (bookingId: number) => {
+  const headers = getAuthHeaders();
+  const response = await axios.post(`${API_BASE}/bookings/${bookingId}/cancel`, {}, { headers });
+  return response.data;
+};
+
 export const getEmployeeSlots = async (employeeId: number, serviceId: number, date: string) => {
   const headers = getAuthHeaders();
   const response = await axios.get(`${API_BASE}/employees/${employeeId}/slots`, {

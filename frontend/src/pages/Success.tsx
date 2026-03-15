@@ -1,5 +1,4 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import BookingStatusChip from '../components/booking/BookingStatusChip';
 
 type BookingSuccessState = {
   booking: {
@@ -61,9 +60,6 @@ const Success = () => {
             <div>
               <p className="text-xl font-semibold text-slate-800 dark:text-slate-100">{booking.service?.name || 'Service'}</p>
               <p className="text-slate-500 dark:text-slate-300">Your appointment has been scheduled successfully.</p>
-            </div>
-            <div className="ml-auto">
-              <BookingStatusChip status={booking.status} />
             </div>
           </div>
 

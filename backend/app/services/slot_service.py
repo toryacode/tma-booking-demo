@@ -5,6 +5,9 @@ from app.models.schedule import Schedule
 from app.models.booking import Booking
 
 
+ACTIVE_SLOT_STATUSES = ["scheduled", "upcoming", "in_progress"]
+
+
 def _is_conflict(candidate: datetime, candidate_end: datetime, intervals: List[Tuple[datetime, datetime]]) -> bool:
     for bstart, bend in intervals:
         if candidate < bend and candidate_end > bstart:
@@ -29,7 +32,7 @@ def get_available_slots(db: Session, employee_id: int, service_duration: int, da
         Booking.employee_id == employee_id,
         Booking.start_time >= datetime.combine(date, time.min),
         Booking.start_time < datetime.combine(date + timedelta(days=1), time.min),
-        Booking.status.in_(["scheduled", "upcoming", "in_progress"])
+        Booking.status.in_(ACTIVE_SLOT_STATUSES)
     ).order_by(Booking.start_time).all()
 
     intervals: List[Tuple[datetime, datetime]] = []

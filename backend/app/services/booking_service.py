@@ -9,6 +9,9 @@ from app.services.reminder_service import send_booking_confirmation
 from app.services.slot_service import is_slot_available
 
 
+ACTIVE_SLOT_STATUSES = ["scheduled", "upcoming"]
+
+
 def create_booking(db: Session, booking: BookingCreate):
     service = db.query(Service).filter(Service.id == booking.service_id).first()
     if not service:
@@ -27,7 +30,7 @@ def create_booking(db: Session, booking: BookingCreate):
         Booking.employee_id == booking.employee_id,
         Booking.start_time < booking.end_time,
         Booking.end_time > booking.start_time,
-        Booking.status.in_(["scheduled", "upcoming", "in_progress"])
+        Booking.status.in_(ACTIVE_SLOT_STATUSES)
     ).first()
     if conflict:
         raise ValueError("Time slot is already booked")
@@ -72,7 +75,7 @@ def reschedule_booking(db: Session, booking_id: int, user_id: str, new_start_tim
         Booking.id != booking_id,
         Booking.start_time < new_end_time,
         Booking.end_time > new_start_time,
-        Booking.status.in_(["scheduled", "upcoming", "in_progress"])
+        Booking.status.in_(ACTIVE_SLOT_STATUSES)
     ).first()
     if conflict:
         raise ValueError("New time slot is already booked")

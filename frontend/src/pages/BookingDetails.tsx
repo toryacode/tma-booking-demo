@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { getMyBookings } from '../api/bookings';
+import { cancelBooking, getMyBookings } from '../api/bookings';
 import BookingStatusChip from '../components/booking/BookingStatusChip';
 
 interface BookingDetailsData {
@@ -30,6 +30,9 @@ const BookingDetails = () => {
   );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
+  const [cancelLoading, setCancelLoading] = useState(false);
+  const [cancelError, setCancelError] = useState('');
 
   useEffect(() => {
     if (booking) {
@@ -66,6 +69,25 @@ const BookingDetails = () => {
 
   const start = booking ? new Date(booking.start_time) : null;
   const end = booking?.end_time ? new Date(booking.end_time) : null;
+  const canCancel = booking?.status === 'scheduled' || booking?.status === 'upcoming';
+
+  const handleConfirmCancel = async () => {
+    if (!booking) return;
+
+    setCancelLoading(true);
+    setCancelError('');
+    try {
+      const updated = await cancelBooking(booking.id);
+      setBooking(updated);
+      setConfirmCancelOpen(false);
+    } catch (err: any) {
+      console.error('Failed to cancel booking', err);
+      const backendMessage = err?.response?.data?.detail;
+      setCancelError(backendMessage || 'Failed to cancel booking.');
+    } finally {
+      setCancelLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white py-8 dark:from-slate-900 dark:to-slate-950">
@@ -143,6 +165,44 @@ const BookingDetails = () => {
                 Full Price: <span className="font-semibold text-slate-800 dark:text-slate-100">${(booking.service?.price || 0).toFixed(2)}</span>
               </p>
             </div>
+
+            {cancelError && (
+              <p className="mt-4 text-rose-500">{cancelError}</p>
+            )}
+
+            {canCancel && !confirmCancelOpen && (
+              <button
+                onClick={() => setConfirmCancelOpen(true)}
+                className="mt-5 rounded-2xl bg-rose-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-rose-700"
+              >
+                Cancel Booking
+              </button>
+            )}
+
+            {confirmCancelOpen && (
+              <div className="mt-5 rounded-2xl border border-rose-200 bg-rose-50 p-4 dark:border-rose-900/40 dark:bg-rose-900/20">
+                <p className="text-sm font-semibold text-rose-700 dark:text-rose-200">Are you sure you want to cancel this booking?</p>
+                <div className="mt-3 flex gap-2">
+                  <button
+                    onClick={handleConfirmCancel}
+                    disabled={cancelLoading}
+                    className={`rounded-xl px-4 py-2 text-sm font-semibold text-white ${cancelLoading ? 'bg-rose-400 cursor-not-allowed' : 'bg-rose-600 hover:bg-rose-700'}`}
+                  >
+                    {cancelLoading ? 'Cancelling...' : 'Confirm'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setConfirmCancelOpen(false);
+                      setCancelError('');
+                    }}
+                    disabled={cancelLoading}
+                    className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                  >
+                    Back
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
