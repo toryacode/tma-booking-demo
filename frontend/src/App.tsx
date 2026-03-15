@@ -92,7 +92,7 @@ function AppRouter() {
             <NavLink
               to="/"
               className={({ isActive }) =>
-                `rounded-xl px-3 py-1.5 text-sm font-semibold transition ${isActive
+                `whitespace-nowrap rounded-xl px-3 py-1.5 text-sm font-semibold transition ${isActive
                   ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-slate-100'
                   : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'}`
               }
@@ -102,7 +102,7 @@ function AppRouter() {
             <NavLink
               to="/services"
               className={({ isActive }) =>
-                `rounded-xl px-3 py-1.5 text-sm font-semibold transition ${isActive
+                `whitespace-nowrap rounded-xl px-3 py-1.5 text-sm font-semibold transition ${isActive
                   ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-slate-100'
                   : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'}`
               }
@@ -112,12 +112,12 @@ function AppRouter() {
             <NavLink
               to="/history"
               className={({ isActive }) =>
-                `rounded-xl px-3 py-1.5 text-sm font-semibold transition ${isActive
+                `whitespace-nowrap rounded-xl px-3 py-1.5 text-sm font-semibold transition ${isActive
                   ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-slate-100'
                   : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'}`
               }
             >
-              My Bookings
+              Bookings
             </NavLink>
           </div>
 
@@ -125,9 +125,10 @@ function AppRouter() {
             <button
               type="button"
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
               className="rounded-full border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
             >
-              {theme === 'dark' ? 'Light' : 'Dark'}
+              {theme === 'dark' ? '☀️' : '🌙'}
             </button>
 
             <NavLink to="/profile" className="flex items-center gap-2 rounded-full border border-slate-200 px-2 py-1 hover:bg-slate-50 transition dark:border-slate-700 dark:hover:bg-slate-800" aria-label="Open profile">
