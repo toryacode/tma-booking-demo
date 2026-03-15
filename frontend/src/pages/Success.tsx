@@ -52,7 +52,7 @@ const Success = () => {
 
         <div className="rounded-3xl bg-white p-6 shadow-lg dark:bg-slate-800">
           <div className="mb-5 flex items-center gap-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-green-600">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-green-600">
             <svg viewBox="0 0 24 24" className="h-8 w-8 text-white" fill="none" xmlns="http://www.w3.org/2000/svg">
               <circle cx="12" cy="12" r="11" stroke="white" strokeWidth="2" fill="transparent" />
               <path d="M7.5 12.5L10.75 15.75L16.5 9.99999" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
