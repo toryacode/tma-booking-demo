@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { getServiceEmployees } from '../api/services';
+import { normalizeImageUrl } from '../utils/image';
 
 interface Employee {
   id: number;
   name: string;
   bio?: string;
+  avatar?: string;
 }
 
 const Employees = () => {
@@ -15,10 +17,12 @@ const Employees = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [failedAvatarIds, setFailedAvatarIds] = useState<number[]>([]);
 
   useEffect(() => {
     if (serviceId) {
       setLoading(true);
+      setFailedAvatarIds([]);
       getServiceEmployees(parseInt(serviceId))
         .then(setEmployees)
         .catch(err => {
@@ -50,7 +54,21 @@ const Employees = () => {
           <div className="grid gap-4 sm:grid-cols-2">
             {employees.map(employee => (
               <div key={employee.id} className="rounded-3xl bg-white p-5 shadow-lg transition hover:-translate-y-1 hover:shadow-2xl dark:bg-slate-800">
-                <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-100">{employee.name}</h2>
+                <div className="mb-3 flex items-center gap-3">
+                  {normalizeImageUrl(employee.avatar) && !failedAvatarIds.includes(employee.id) ? (
+                    <img
+                      src={normalizeImageUrl(employee.avatar) || undefined}
+                      alt={employee.name}
+                      className="h-12 w-12 rounded-full object-cover"
+                      onError={() => setFailedAvatarIds(prev => (prev.includes(employee.id) ? prev : [...prev, employee.id]))}
+                    />
+                  ) : (
+                    <div className="h-12 w-12 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center text-sm font-semibold dark:bg-slate-700 dark:text-slate-100">
+                      {employee.name.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-100">{employee.name}</h2>
+                </div>
                 <p className="mt-2 text-slate-500 dark:text-slate-300">{employee.bio}</p>
                 <Link to={`/booking?service=${serviceId}&employee=${employee.id}`} className="mt-4 inline-block w-full rounded-2xl bg-blue-600 px-4 py-2 text-center font-semibold text-white transition hover:bg-blue-700">
                   Book with {employee.name}
