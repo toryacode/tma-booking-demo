@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { getEmployeeSlots, createBooking } from '../api/bookings';
 import { getServiceById } from '../api/services';
 import { getEmployeeById } from '../api/employees';
+import { normalizeImageUrl } from '../utils/image';
 
 const formatDateForInput = (dateObj: Date) => {
   const pad = (num: number) => String(num).padStart(2, '0');
@@ -24,6 +25,12 @@ const Booking = () => {
   const [service, setService] = useState<{ duration: number; price: number; name: string } | null>(null);
   const [employee, setEmployee] = useState<{ name: string; bio?: string; avatar?: string } | null>(null);
   const todayDate = formatDateForInput(new Date());
+  const normalizedEmployeeAvatar = normalizeImageUrl(employee?.avatar);
+  const [employeeAvatarError, setEmployeeAvatarError] = useState(false);
+
+  useEffect(() => {
+    setEmployeeAvatarError(false);
+  }, [normalizedEmployeeAvatar]);
 
   useEffect(() => {
     if (serviceId) {
@@ -171,8 +178,13 @@ const Booking = () => {
             <div className="mb-5 rounded-2xl border border-slate-200 p-4 dark:border-slate-700">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Expert</p>
               <div className="mt-3 flex items-center gap-3">
-                {employee.avatar ? (
-                  <img src={employee.avatar} alt={employee.name} className="h-12 w-12 rounded-full object-cover" />
+                {normalizedEmployeeAvatar && !employeeAvatarError ? (
+                  <img
+                    src={normalizedEmployeeAvatar}
+                    alt={employee.name}
+                    className="h-12 w-12 rounded-full object-cover"
+                    onError={() => setEmployeeAvatarError(true)}
+                  />
                 ) : (
                   <div className="h-12 w-12 rounded-full bg-slate-300 text-slate-700 flex items-center justify-center font-semibold dark:bg-slate-600 dark:text-slate-200">
                     {employee.name?.charAt(0).toUpperCase() || 'E'}

@@ -10,6 +10,7 @@ import History from './pages/History';
 import Success from './pages/Success';
 import Profile from './pages/Profile';
 import { clearAccessToken, getAccessToken, getCurrentUser, loginWithTelegramInitData, setAccessToken, type MeResponse } from './api/auth';
+import { normalizeImageUrl } from './utils/image';
 
 const getDisplayName = (user: MeResponse | null) => {
   if (!user) return 'Profile';
@@ -137,7 +138,13 @@ function AppRouter() {
   }, [location.search]);
 
   const avatarSrc = currentUser?.photo_url;
+  const normalizedAvatarSrc = normalizeImageUrl(avatarSrc);
   const avatarFallback = getDisplayName(currentUser).charAt(0).toUpperCase() || 'P';
+  const [navAvatarError, setNavAvatarError] = useState(false);
+
+  useEffect(() => {
+    setNavAvatarError(false);
+  }, [normalizedAvatarSrc]);
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900 transition-colors dark:bg-slate-950 dark:text-slate-100">
@@ -187,8 +194,13 @@ function AppRouter() {
             </button>
 
             <NavLink to="/profile" className="flex items-center gap-2 rounded-full border border-slate-200 px-2 py-1 hover:bg-slate-50 transition dark:border-slate-700 dark:hover:bg-slate-800" aria-label="Open profile">
-            {avatarSrc ? (
-              <img src={avatarSrc} alt={getDisplayName(currentUser)} className="h-8 w-8 rounded-full object-cover" />
+            {normalizedAvatarSrc && !navAvatarError ? (
+              <img
+                src={normalizedAvatarSrc}
+                alt={getDisplayName(currentUser)}
+                className="h-8 w-8 rounded-full object-cover"
+                onError={() => setNavAvatarError(true)}
+              />
             ) : (
               <div className="h-8 w-8 rounded-full bg-slate-800 text-white flex items-center justify-center text-sm font-semibold dark:bg-slate-200 dark:text-slate-900">{avatarFallback}</div>
             )}

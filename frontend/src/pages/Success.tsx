@@ -1,4 +1,6 @@
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { normalizeImageUrl } from '../utils/image';
 
 type BookingSuccessState = {
   booking: {
@@ -16,6 +18,12 @@ const Success = () => {
   const location = useLocation();
   const state = location.state as BookingSuccessState | null;
   const booking = state?.booking;
+  const normalizedEmployeeAvatar = normalizeImageUrl(booking?.employee?.avatar);
+  const [employeeAvatarError, setEmployeeAvatarError] = useState(false);
+
+  useEffect(() => {
+    setEmployeeAvatarError(false);
+  }, [normalizedEmployeeAvatar]);
 
   if (!booking) {
     return (
@@ -67,11 +75,12 @@ const Success = () => {
             <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-700/50">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Expert</p>
               <div className="mt-3 flex items-center gap-3">
-                {booking.employee?.avatar ? (
+                {normalizedEmployeeAvatar && !employeeAvatarError ? (
                   <img
-                    src={booking.employee.avatar}
+                    src={normalizedEmployeeAvatar}
                     alt={booking.employee?.name || 'Expert'}
                     className="h-12 w-12 rounded-full object-cover"
+                    onError={() => setEmployeeAvatarError(true)}
                   />
                 ) : (
                   <div className="h-12 w-12 rounded-full bg-slate-300 text-slate-700 flex items-center justify-center font-semibold dark:bg-slate-600 dark:text-slate-200">

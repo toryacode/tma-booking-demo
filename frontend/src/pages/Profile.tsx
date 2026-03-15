@@ -1,5 +1,7 @@
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { MeResponse } from '../api/auth';
+import { normalizeImageUrl } from '../utils/image';
 
 interface ProfileProps {
   user: MeResponse | null;
@@ -21,6 +23,12 @@ const getInitial = (user: MeResponse | null) => {
 const Profile = ({ user }: ProfileProps) => {
   const navigate = useNavigate();
   const displayName = getDisplayName(user);
+  const avatarSrc = normalizeImageUrl(user?.photo_url);
+  const [avatarError, setAvatarError] = useState(false);
+
+  useEffect(() => {
+    setAvatarError(false);
+  }, [avatarSrc]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white py-8 dark:from-slate-900 dark:to-slate-950">
@@ -36,11 +44,12 @@ const Profile = ({ user }: ProfileProps) => {
         </div>
 
         <div className="rounded-3xl bg-white p-8 shadow-lg text-center dark:bg-slate-800">
-          {user?.photo_url ? (
+          {avatarSrc && !avatarError ? (
             <img
-              src={user.photo_url}
+              src={avatarSrc}
               alt={displayName}
               className="mx-auto h-28 w-28 rounded-full object-cover ring-4 ring-slate-100"
+              onError={() => setAvatarError(true)}
             />
           ) : (
             <div className="mx-auto h-28 w-28 rounded-full bg-slate-800 text-white text-4xl font-bold flex items-center justify-center dark:bg-slate-200 dark:text-slate-900">

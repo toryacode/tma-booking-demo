@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { cancelBooking, getMyBookings } from '../api/bookings';
 import BookingStatusChip from '../components/booking/BookingStatusChip';
+import { normalizeImageUrl } from '../utils/image';
 
 interface BookingDetailsData {
   id: number;
@@ -33,6 +34,7 @@ const BookingDetails = () => {
   const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
   const [cancelError, setCancelError] = useState('');
+  const [employeeAvatarError, setEmployeeAvatarError] = useState(false);
 
   useEffect(() => {
     if (booking) {
@@ -70,6 +72,11 @@ const BookingDetails = () => {
   const start = booking ? new Date(booking.start_time) : null;
   const end = booking?.end_time ? new Date(booking.end_time) : null;
   const canCancel = booking?.status === 'scheduled' || booking?.status === 'upcoming';
+  const normalizedEmployeeAvatar = normalizeImageUrl(booking?.employee?.avatar);
+
+  useEffect(() => {
+    setEmployeeAvatarError(false);
+  }, [normalizedEmployeeAvatar]);
 
   const handleConfirmCancel = async () => {
     if (!booking) return;
@@ -127,11 +134,12 @@ const BookingDetails = () => {
               <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-700/50">
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Expert</p>
                 <div className="mt-3 flex items-center gap-3">
-                  {booking.employee?.avatar ? (
+                  {normalizedEmployeeAvatar && !employeeAvatarError ? (
                     <img
-                      src={booking.employee.avatar}
+                      src={normalizedEmployeeAvatar}
                       alt={booking.employee?.name || 'Expert'}
                       className="h-12 w-12 rounded-full object-cover"
+                      onError={() => setEmployeeAvatarError(true)}
                     />
                   ) : (
                     <div className="h-12 w-12 rounded-full bg-slate-300 text-slate-700 flex items-center justify-center font-semibold dark:bg-slate-600 dark:text-slate-200">
