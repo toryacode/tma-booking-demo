@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api import services, employees, bookings, auth
 from app.db.base import Base
 from app.db.session import engine
-from app.core.scheduler import start_scheduler
+from app.core.scheduler import start_scheduler, restore_booking_lifecycle_on_startup
 import atexit
 import time
 from sqlalchemy import text
@@ -44,6 +44,7 @@ def on_startup():
     wait_for_db()
     Base.metadata.create_all(bind=engine)
     start_scheduler()
+    restore_booking_lifecycle_on_startup()
 
 
 @atexit.register

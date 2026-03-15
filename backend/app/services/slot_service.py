@@ -8,6 +8,14 @@ from app.models.booking import Booking
 ACTIVE_SLOT_STATUSES = ["scheduled", "upcoming", "in_progress"]
 
 
+def _ceil_to_quarter_hour(dt: datetime) -> datetime:
+    base = dt.replace(second=0, microsecond=0)
+    remainder = base.minute % 15
+    if remainder == 0:
+        return base
+    return base + timedelta(minutes=15 - remainder)
+
+
 def _is_conflict(candidate: datetime, candidate_end: datetime, intervals: List[Tuple[datetime, datetime]]) -> bool:
     for bstart, bend in intervals:
         if candidate < bend and candidate_end > bstart:
@@ -16,6 +24,10 @@ def _is_conflict(candidate: datetime, candidate_end: datetime, intervals: List[T
 
 
 def get_available_slots(db: Session, employee_id: int, service_duration: int, date: datetime.date) -> List[datetime]:
+    today = datetime.now().date()
+    if date < today:
+        return []
+
     weekday = date.weekday()  # 0=Monday
     schedule = db.query(Schedule).filter(
         Schedule.employee_id == employee_id,
@@ -44,6 +56,8 @@ def get_available_slots(db: Session, employee_id: int, service_duration: int, da
 
     available_slots: List[datetime] = []
     candidate = start_dt
+    if date == today:
+        candidate = max(candidate, _ceil_to_quarter_hour(datetime.now()))
 
     while candidate + timedelta(minutes=service_duration) <= end_dt:
         candidate_end = candidate + timedelta(minutes=service_duration)

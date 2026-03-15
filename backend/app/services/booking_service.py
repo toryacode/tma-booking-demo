@@ -1,15 +1,11 @@
 from sqlalchemy.orm import Session, joinedload
-from datetime import datetime, timedelta
+from datetime import datetime
 from app.models.booking import Booking
 from app.models.service import Service
-from app.models.employee import Employee
 from app.schemas.booking import BookingCreate
-from app.core.scheduler import schedule_reminder
+from app.core.scheduler import schedule_booking_lifecycle, cancel_booking_lifecycle_jobs
 from app.services.reminder_service import send_booking_confirmation
 from app.services.slot_service import is_slot_available
-
-
-ACTIVE_SLOT_STATUSES = ["scheduled", "upcoming"]
 
 
 def create_booking(db: Session, booking: BookingCreate):
@@ -23,6 +19,12 @@ def create_booking(db: Session, booking: BookingCreate):
     if booking.end_time.tzinfo is not None:
         booking.end_time = booking.end_time.replace(tzinfo=None)
 
+    now = datetime.now()
+    if booking.start_time < now:
+        raise ValueError('Cannot create booking in the past')
+    if booking.end_time <= booking.start_time:
+        raise ValueError('Booking end time must be after start time')
+
     if not is_slot_available(db, booking.employee_id, service.duration, booking.start_time, booking.start_time.date()):
         raise ValueError('Selected slot is not available')
 
@@ -30,7 +32,7 @@ def create_booking(db: Session, booking: BookingCreate):
         Booking.employee_id == booking.employee_id,
         Booking.start_time < booking.end_time,
         Booking.end_time > booking.start_time,
-        Booking.status.in_(ACTIVE_SLOT_STATUSES)
+        Booking.status.in_(["scheduled", "upcoming", "in_progress"])
     ).first()
     if conflict:
         raise ValueError("Time slot is already booked")
@@ -42,9 +44,8 @@ def create_booking(db: Session, booking: BookingCreate):
     # Load relations for response
     db_booking = db.query(Booking).options(joinedload(Booking.service), joinedload(Booking.employee)).get(db_booking.id)
 
-    # Schedule reminder
-    reminder_time = db_booking.start_time - timedelta(minutes=15)
-    schedule_reminder(db_booking.id, reminder_time)
+    # Schedule full lifecycle transitions and reminder
+    schedule_booking_lifecycle(db_booking.id, db_booking.start_time, db_booking.end_time)
 
     # Send confirmation
     send_booking_confirmation(db_booking.id)
@@ -61,6 +62,7 @@ def cancel_booking(db: Session, booking_id: int, user_id: str):
     
     booking.status = "cancelled"
     db.commit()
+    cancel_booking_lifecycle_jobs(booking.id)
     return booking
 
 
@@ -69,13 +71,24 @@ def reschedule_booking(db: Session, booking_id: int, user_id: str, new_start_tim
     if not booking:
         raise ValueError("Booking not found")
     
+    if new_start_time.tzinfo is not None:
+        new_start_time = new_start_time.replace(tzinfo=None)
+    if new_end_time.tzinfo is not None:
+        new_end_time = new_end_time.replace(tzinfo=None)
+
+    now = datetime.now()
+    if new_start_time < now:
+        raise ValueError('Cannot reschedule booking to the past')
+    if new_end_time <= new_start_time:
+        raise ValueError('Booking end time must be after start time')
+
     # Check new slot
     conflict = db.query(Booking).filter(
         Booking.employee_id == booking.employee_id,
         Booking.id != booking_id,
         Booking.start_time < new_end_time,
         Booking.end_time > new_start_time,
-        Booking.status.in_(ACTIVE_SLOT_STATUSES)
+        Booking.status.in_(["scheduled", "upcoming", "in_progress"])
     ).first()
     if conflict:
         raise ValueError("New time slot is already booked")
@@ -83,10 +96,9 @@ def reschedule_booking(db: Session, booking_id: int, user_id: str, new_start_tim
     booking.start_time = new_start_time
     booking.end_time = new_end_time
     db.commit()
-    
-    # Reschedule reminder
-    reminder_time = new_start_time - timedelta(minutes=15)
-    schedule_reminder(booking.id, reminder_time)
+
+    # Reschedule lifecycle jobs and reminder
+    schedule_booking_lifecycle(booking.id, booking.start_time, booking.end_time)
     
     return booking
 

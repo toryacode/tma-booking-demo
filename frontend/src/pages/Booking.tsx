@@ -4,6 +4,11 @@ import { getEmployeeSlots, createBooking } from '../api/bookings';
 import { getServiceById } from '../api/services';
 import { getEmployeeById } from '../api/employees';
 
+const formatDateForInput = (dateObj: Date) => {
+  const pad = (num: number) => String(num).padStart(2, '0');
+  return `${dateObj.getFullYear()}-${pad(dateObj.getMonth() + 1)}-${pad(dateObj.getDate())}`;
+};
+
 const Booking = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -18,6 +23,7 @@ const Booking = () => {
   const [bookingLoading, setBookingLoading] = useState(false);
   const [service, setService] = useState<{ duration: number; price: number; name: string } | null>(null);
   const [employee, setEmployee] = useState<{ name: string; bio?: string; avatar?: string } | null>(null);
+  const todayDate = formatDateForInput(new Date());
 
   useEffect(() => {
     if (serviceId) {
@@ -55,7 +61,7 @@ const Booking = () => {
         for (let dayOffset = 0; dayOffset < 45; dayOffset += 1) {
           const candidate = new Date(today);
           candidate.setDate(today.getDate() + dayOffset);
-          const candidateDate = candidate.toISOString().slice(0, 10);
+            const candidateDate = formatDateForInput(candidate);
           const data = await getEmployeeSlots(employeeId, serviceId, candidateDate);
           if (!active) return;
 
@@ -87,6 +93,13 @@ const Booking = () => {
 
   useEffect(() => {
     if (date) {
+      if (date < todayDate) {
+        setSlots([]);
+        setSelectedSlot('');
+        setError('Past dates are not allowed.');
+        return;
+      }
+
       setLoading(true);
       setError('');
       setSelectedSlot('');
@@ -98,7 +111,7 @@ const Booking = () => {
         })
         .finally(() => setLoading(false));
     }
-  }, [date, employeeId, serviceId]);
+  }, [date, employeeId, serviceId, todayDate]);
 
   const formatLocalDateTime = (dateObj: Date) => {
     const pad = (num: number) => String(num).padStart(2, '0');
@@ -175,7 +188,21 @@ const Booking = () => {
 
           <div className="mb-5">
             <label className="block text-sm font-medium text-slate-600 mb-2 dark:text-slate-300">Select Date</label>
-            <input type="date" value={date} onChange={e => setDate(e.target.value)} className="block w-full min-w-0 max-w-full rounded-xl border border-slate-200 px-3 py-2 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+            <input
+              type="date"
+              value={date}
+              min={todayDate}
+              onChange={e => {
+                const nextDate = e.target.value;
+                if (nextDate < todayDate) {
+                  setError('Past dates are not allowed.');
+                  setDate(todayDate);
+                  return;
+                }
+                setDate(nextDate);
+              }}
+              className="block w-full min-w-0 max-w-full rounded-xl border border-slate-200 px-3 py-2 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+            />
           </div>
 
           {autoDateLoading && <p className="text-slate-500 mb-3 dark:text-slate-300">Finding nearest available date...</p>}
