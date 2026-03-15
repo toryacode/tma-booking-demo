@@ -85,35 +85,35 @@ const Booking = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white py-8">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white py-8 dark:from-slate-900 dark:to-slate-950">
       <div className="mx-auto max-w-xl px-4">
-        <div className="mb-5 flex items-center justify-between">
+        <div className="mb-5">
+          <h1 className="mb-3 text-3xl font-bold text-slate-800 dark:text-slate-100">Book Appointment</h1>
           <button onClick={() => navigate(-1)} className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold shadow-sm transition hover:bg-slate-100">
             ← Back
           </button>
-          <h1 className="text-3xl font-bold text-slate-800">Book Appointment</h1>
         </div>
 
-        <div className="rounded-3xl bg-white p-6 shadow-lg">
+        <div className="rounded-3xl bg-white p-6 shadow-lg dark:bg-slate-800">
           <div className="mb-5">
-            <label className="block text-sm font-medium text-slate-600 mb-2">Select Date</label>
-            <input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-2 outline-none focus:border-blue-500" />
+            <label className="block text-sm font-medium text-slate-600 mb-2 dark:text-slate-300">Select Date</label>
+            <input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-2 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
           </div>
 
-          {loading && <p className="text-slate-500 mb-3">Searching slots...</p>}
+          {loading && <p className="text-slate-500 mb-3 dark:text-slate-300">Searching slots...</p>}
           {error && <p className="text-rose-500 mb-3">{error}</p>}
 
           <div className="mb-5">
-            <h2 className="text-lg font-semibold text-slate-700 mb-3">Available Slots</h2>
+            <h2 className="text-lg font-semibold text-slate-700 mb-3 dark:text-slate-200">Available Slots</h2>
             {slots.length === 0 && !loading ? (
-              <p className="text-slate-500">No slots available for this date.</p>
+              <p className="text-slate-500 dark:text-slate-300">No slots available for this date.</p>
             ) : (
               <div className="grid grid-cols-2 gap-2">
                 {slots.map(slot => (
                   <button
                     key={slot}
                     onClick={() => setSelectedSlot(slot)}
-                    className={`rounded-xl px-3 py-2 ${selectedSlot === slot ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-700'} transition`}
+                    className={`rounded-xl px-3 py-2 ${selectedSlot === slot ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-100'} transition`}
                   >
                     {new Date(slot).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </button>

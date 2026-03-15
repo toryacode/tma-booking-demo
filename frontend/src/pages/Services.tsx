@@ -32,28 +32,28 @@ const Services = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white py-8">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white py-8 dark:from-slate-900 dark:to-slate-950">
       <div className="mx-auto max-w-3xl px-4">
-        <div className="mb-5 flex items-center justify-between">
+        <div className="mb-5">
+          <h1 className="mb-3 text-3xl font-bold text-slate-800 dark:text-slate-100">Services</h1>
           <button onClick={() => navigate(-1)} className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold shadow-sm transition hover:bg-slate-100">
             ← Back
           </button>
-          <h1 className="text-3xl font-bold text-slate-800">Services</h1>
         </div>
 
         {loading ? (
-          <div className="rounded-3xl bg-white/80 p-6 text-center text-slate-500 shadow-lg backdrop-blur-xl">Loading services...</div>
+          <div className="rounded-3xl bg-white/80 p-6 text-center text-slate-500 shadow-lg backdrop-blur-xl dark:bg-slate-800/80 dark:text-slate-300">Loading services...</div>
         ) : error ? (
-          <div className="rounded-3xl bg-rose-50 p-6 text-center text-rose-700 shadow-lg">{error}</div>
+          <div className="rounded-3xl bg-rose-50 p-6 text-center text-rose-700 shadow-lg dark:bg-rose-900/30 dark:text-rose-200">{error}</div>
         ) : services.length === 0 ? (
-          <div className="rounded-3xl bg-white/90 p-6 text-center text-slate-600 shadow-lg">No services available currently.</div>
+          <div className="rounded-3xl bg-white/90 p-6 text-center text-slate-600 shadow-lg dark:bg-slate-800 dark:text-slate-300">No services available currently.</div>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2">
             {services.map(service => (
-              <div key={service.id} className="rounded-3xl bg-white p-5 shadow-lg transition hover:-translate-y-1 hover:shadow-2xl">
-                <h2 className="text-xl font-semibold text-slate-800">{service.name}</h2>
-                <p className="mt-2 text-slate-500">{service.description}</p>
-                <div className="mt-4 flex items-center justify-between text-sm text-slate-600">
+              <div key={service.id} className="rounded-3xl bg-white p-5 shadow-lg transition hover:-translate-y-1 hover:shadow-2xl dark:bg-slate-800">
+                <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-100">{service.name}</h2>
+                <p className="mt-2 text-slate-500 dark:text-slate-300">{service.description}</p>
+                <div className="mt-4 flex items-center justify-between text-sm text-slate-600 dark:text-slate-300">
                   <span>{service.duration} min</span>
                   <span>${service.price.toFixed(2)}</span>
                 </div>

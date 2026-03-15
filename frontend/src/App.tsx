@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, NavLink, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useState } from 'react';
 import Home from './pages/Home';
@@ -21,6 +21,18 @@ const getDisplayName = (user: MeResponse | null) => {
 function AppRouter() {
   const location = useLocation();
   const [currentUser, setCurrentUser] = useState<MeResponse | null>(null);
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    const stored = localStorage.getItem('tma_theme');
+    if (stored === 'light' || stored === 'dark') {
+      return stored;
+    }
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  });
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', theme === 'dark');
+    localStorage.setItem('tma_theme', theme);
+  }, [theme]);
 
   useEffect(() => {
     if (window.Telegram?.WebApp?.ready) {
@@ -73,24 +85,62 @@ function AppRouter() {
   const avatarFallback = getDisplayName(currentUser).charAt(0).toUpperCase() || 'P';
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <nav className="bg-white shadow p-3 mb-4">
-        <div className="container mx-auto flex items-center justify-between gap-3">
-          <div className="flex gap-3">
-            <Link to="/" className="text-blue-500 hover:underline">Home</Link>
-            <Link to="/services" className="text-blue-500 hover:underline">Services</Link>
-            <Link to="/history" className="text-blue-500 hover:underline">History</Link>
+    <div className="min-h-screen bg-slate-100 text-slate-900 transition-colors dark:bg-slate-950 dark:text-slate-100">
+      <nav className="sticky top-0 z-20 border-b border-slate-200/70 bg-white/90 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/85">
+        <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-3">
+          <div className="rounded-2xl bg-slate-100 p-1.5 flex items-center gap-1.5 dark:bg-slate-800/80">
+            <NavLink
+              to="/"
+              className={({ isActive }) =>
+                `rounded-xl px-3 py-1.5 text-sm font-semibold transition ${isActive
+                  ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-slate-100'
+                  : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'}`
+              }
+            >
+              Home
+            </NavLink>
+            <NavLink
+              to="/services"
+              className={({ isActive }) =>
+                `rounded-xl px-3 py-1.5 text-sm font-semibold transition ${isActive
+                  ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-slate-100'
+                  : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'}`
+              }
+            >
+              Services
+            </NavLink>
+            <NavLink
+              to="/history"
+              className={({ isActive }) =>
+                `rounded-xl px-3 py-1.5 text-sm font-semibold transition ${isActive
+                  ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-slate-100'
+                  : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'}`
+              }
+            >
+              My Bookings
+            </NavLink>
           </div>
 
-          <Link to="/profile" className="flex items-center gap-2 rounded-full border border-slate-200 px-2 py-1 hover:bg-slate-50 transition" aria-label="Open profile">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              className="rounded-full border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
+            >
+              {theme === 'dark' ? 'Light' : 'Dark'}
+            </button>
+
+            <NavLink to="/profile" className="flex items-center gap-2 rounded-full border border-slate-200 px-2 py-1 hover:bg-slate-50 transition dark:border-slate-700 dark:hover:bg-slate-800" aria-label="Open profile">
             {avatarSrc ? (
               <img src={avatarSrc} alt={getDisplayName(currentUser)} className="h-8 w-8 rounded-full object-cover" />
             ) : (
-              <div className="h-8 w-8 rounded-full bg-slate-800 text-white flex items-center justify-center text-sm font-semibold">{avatarFallback}</div>
+              <div className="h-8 w-8 rounded-full bg-slate-800 text-white flex items-center justify-center text-sm font-semibold dark:bg-slate-200 dark:text-slate-900">{avatarFallback}</div>
             )}
-          </Link>
+            </NavLink>
+          </div>
         </div>
       </nav>
+      <main className="pt-4">
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/services" element={<Services />} />
@@ -100,6 +150,7 @@ function AppRouter() {
         <Route path="/history" element={<History />} />
         <Route path="/profile" element={<Profile user={currentUser} />} />
       </Routes>
+      </main>
     </div>
   );
 }
