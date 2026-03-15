@@ -20,11 +20,12 @@ const Home = () => {
         const bookings = (await getMyBookings()) as Booking[];
         const now = new Date();
         const upcoming = bookings
-          .filter((booking) => {
-            const start = new Date(booking.start_time);
-            return start >= now && booking.status !== 'cancelled' && booking.status !== 'completed';
-          })
-          .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())[0] || null;
+          .filter((booking) => booking.status !== 'cancelled')
+          .sort((a, b) => {
+            const aDelta = Math.abs(new Date(a.start_time).getTime() - now.getTime());
+            const bDelta = Math.abs(new Date(b.start_time).getTime() - now.getTime());
+            return aDelta - bDelta;
+          })[0] || null;
 
         setNextBooking(upcoming);
       } catch {
@@ -48,7 +49,7 @@ const Home = () => {
               state={{ booking: nextBooking }}
               className="mb-6 block rounded-2xl border border-blue-200 bg-blue-50 p-4 transition hover:-translate-y-0.5 hover:shadow-md dark:border-blue-800 dark:bg-blue-950/40"
             >
-              <p className="text-xs font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-300">Upcoming Booking</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-300">Closest Booking</p>
               <p className="mt-2 text-sm font-semibold text-slate-800 dark:text-slate-100">
                 {nextBooking.service?.name || 'Service'} with {nextBooking.employee?.name || 'Specialist'}
               </p>

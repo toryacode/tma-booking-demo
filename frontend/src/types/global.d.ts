@@ -16,6 +16,7 @@ declare global {
         initDataUnsafe?: { user?: any };
         isFullscreen?: boolean;
         ready?: () => void;
+        expand?: () => void;
         requestFullscreen?: () => void;
         close?: () => void;
       };

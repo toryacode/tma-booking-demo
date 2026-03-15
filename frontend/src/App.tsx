@@ -41,11 +41,11 @@ function AppRouter() {
       webApp.ready();
     }
 
-    if (webApp?.requestFullscreen && !webApp.isFullscreen) {
+    if (webApp?.expand) {
       try {
-        webApp.requestFullscreen();
+        webApp.expand();
       } catch (err) {
-        console.warn('Fullscreen request failed', err);
+        console.warn('Full-size expand failed', err);
       }
     }
 
