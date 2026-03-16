@@ -31,6 +31,8 @@ interface BookingReviewData {
   review_date: string;
 }
 
+const normalizeStatus = (status: string) => status.trim().toLowerCase().replace(' ', '_');
+
 const BookingDetails = () => {
   const navigate = useNavigate();
   const { bookingId } = useParams();
@@ -84,8 +86,10 @@ const BookingDetails = () => {
     void loadBooking();
   }, [booking, bookingId]);
 
+  const normalizedBookingStatus = booking ? normalizeStatus(booking.status) : '';
+
   useEffect(() => {
-    if (!booking || booking.status !== 'completed') {
+    if (!booking || normalizedBookingStatus !== 'completed') {
       return;
     }
 
@@ -103,12 +107,12 @@ const BookingDetails = () => {
     };
 
     void loadReview();
-  }, [booking]);
+  }, [booking, normalizedBookingStatus]);
 
   const start = booking ? new Date(booking.start_time) : null;
   const end = booking?.end_time ? new Date(booking.end_time) : null;
-  const canCancel = booking?.status === 'scheduled' || booking?.status === 'upcoming';
-  const canReschedule = booking?.status === 'scheduled' || booking?.status === 'upcoming';
+  const canCancel = normalizedBookingStatus === 'scheduled' || normalizedBookingStatus === 'upcoming' || normalizedBookingStatus === 'upcomming';
+  const canReschedule = canCancel;
   const normalizedEmployeeAvatar = normalizeImageUrl(booking?.employee?.avatar);
 
   useEffect(() => {
@@ -134,7 +138,7 @@ const BookingDetails = () => {
   };
 
   const handleSubmitReview = async () => {
-    if (!booking || booking.status !== 'completed') {
+    if (!booking || normalizedBookingStatus !== 'completed') {
       return;
     }
     if (selectedRating < 1 || selectedRating > 5) {
@@ -285,7 +289,7 @@ const BookingDetails = () => {
               </div>
             )}
 
-            {booking.status === 'completed' && (
+            {normalizedBookingStatus === 'completed' && (
               <div className="mt-6 rounded-2xl border border-slate-200 p-4 dark:border-slate-700">
                 <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">Rate your visit</p>
                 <div className="mt-3 flex items-center gap-1">

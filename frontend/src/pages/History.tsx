@@ -18,7 +18,8 @@ interface BookingSection {
   bookings: Booking[];
 }
 
-const ACTIVE_STATUSES = ['scheduled', 'upcoming', 'in_progress'];
+const normalizeStatus = (status: string) => status.trim().toLowerCase().replace(' ', '_');
+const ACTIVE_STATUSES = ['scheduled', 'upcoming', 'upcomming', 'in_progress', 'in progress'];
 
 const History = () => {
   const navigate = useNavigate();
@@ -60,17 +61,20 @@ const History = () => {
     {
       key: 'scheduled',
       title: 'Scheduled, Upcoming & In Progress',
-      bookings: sortedBookings.filter(booking => ACTIVE_STATUSES.includes(booking.status.toLowerCase())),
+      bookings: sortedBookings.filter(booking => ACTIVE_STATUSES.includes(normalizeStatus(booking.status))),
     },
     {
       key: 'completed',
       title: 'Completed',
-      bookings: sortedBookings.filter(booking => booking.status.toLowerCase() === 'completed'),
+      bookings: sortedBookings.filter(booking => normalizeStatus(booking.status) === 'completed'),
     },
     {
       key: 'canceled',
       title: 'Canceled',
-      bookings: sortedBookings.filter(booking => booking.status.toLowerCase() === 'cancelled' || booking.status.toLowerCase() === 'canceled'),
+      bookings: sortedBookings.filter(booking => {
+        const status = normalizeStatus(booking.status);
+        return status === 'cancelled' || status === 'canceled';
+      }),
     },
   ];
 

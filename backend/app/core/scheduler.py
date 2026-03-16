@@ -7,6 +7,7 @@ from app.models.booking import Booking
 
 scheduler = AsyncIOScheduler()
 JOB_ID = "booking_status_reconcile"
+UPCOMING_STATUSES = ["upcoming", "upcomming"]
 
 
 def reconcile_booking_statuses():
@@ -15,6 +16,13 @@ def reconcile_booking_statuses():
         now = datetime.now()
         day_start = datetime.combine(now.date(), time.min)
         next_day_start = day_start + timedelta(days=1)
+
+        # Normalize legacy typo statuses so downstream filters are consistent.
+        typo_upcoming = db.query(Booking).filter(Booking.status == "upcomming").all()
+        for booking in typo_upcoming:
+            booking.status = "upcoming"
+        if typo_upcoming:
+            db.commit()
 
         # 1) scheduled -> upcoming (today, starts within next 15 minutes, but not already started)
         upcoming_bookings = db.query(Booking).filter(
@@ -34,7 +42,7 @@ def reconcile_booking_statuses():
 
         # 2) scheduled/upcoming -> in_progress (booking already started)
         in_progress_bookings = db.query(Booking).filter(
-            Booking.status.in_(["scheduled", "upcoming"]),
+            Booking.status.in_(["scheduled", *UPCOMING_STATUSES]),
             Booking.start_time <= now,
         ).all()
         for booking in in_progress_bookings:

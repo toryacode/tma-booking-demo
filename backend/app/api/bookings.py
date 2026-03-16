@@ -9,6 +9,7 @@ from app.schemas.booking import BookingCreate, Booking as BookingSchema
 from app.schemas.review import ReviewCreate, Review as ReviewSchema
 from app.services.booking_service import create_booking, cancel_booking, reschedule_booking, get_user_bookings
 from app.core.security import verify_token
+from app.core.scheduler import reconcile_booking_statuses
 
 router = APIRouter()
 
@@ -73,6 +74,7 @@ def get_my_bookings(
     db: Session = Depends(get_db),
     user_id: str = Depends(get_current_user)
 ):
+    reconcile_booking_statuses()
     return get_user_bookings(db, user_id)
 
 

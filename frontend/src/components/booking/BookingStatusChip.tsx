@@ -3,7 +3,8 @@ interface BookingStatusChipProps {
 }
 
 const BookingStatusChip = ({ status }: BookingStatusChipProps) => {
-  const normalizedStatus = status.toLowerCase();
+  const normalizedStatus = status.trim().toLowerCase().replace(' ', '_');
+  const statusForColor = normalizedStatus === 'upcomming' ? 'upcoming' : normalizedStatus;
   const displayStatus = normalizedStatus.replace('_', ' ');
 
   const colors = {
@@ -16,7 +17,7 @@ const BookingStatusChip = ({ status }: BookingStatusChipProps) => {
   };
 
   return (
-    <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold capitalize ${colors[normalizedStatus as keyof typeof colors] || 'bg-slate-500/20 text-slate-700 ring-1 ring-inset ring-slate-500/30 dark:bg-slate-400/20 dark:text-slate-200 dark:ring-slate-300/30'}`}>
+    <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold capitalize ${colors[statusForColor as keyof typeof colors] || 'bg-slate-500/20 text-slate-700 ring-1 ring-inset ring-slate-500/30 dark:bg-slate-400/20 dark:text-slate-200 dark:ring-slate-300/30'}`}>
       {displayStatus}
     </span>
   );
