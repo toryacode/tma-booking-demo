@@ -1,10 +1,12 @@
 from pydantic_settings import BaseSettings
 from pydantic import field_validator
 from typing import Optional
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 
 class Settings(BaseSettings):
     database_url: str = "postgresql://user:password@postgres:5432/beauty_salon"
+    tz: str = "Europe/Moscow"
     secret_key: str = "changeme"
     telegram_bot_token: str = ""
     telegram_bot_username: str = ""
@@ -24,6 +26,16 @@ class Settings(BaseSettings):
             return "postgresql://user:password@postgres:5432/beauty_salon"
         if "localhost" in v:
             return v.replace("localhost", "postgres")
+        return v
+
+    @field_validator("tz", mode="before")
+    def validate_timezone(cls, v):
+        if not v:
+            return "Europe/Moscow"
+        try:
+            ZoneInfo(v)
+        except ZoneInfoNotFoundError as exc:
+            raise ValueError(f"Unknown timezone: {v}") from exc
         return v
 
 

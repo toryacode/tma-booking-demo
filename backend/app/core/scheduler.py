@@ -1,33 +1,20 @@
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from datetime import datetime, timedelta
-from zoneinfo import ZoneInfo
 from app.services.reminder_service import send_reminder
 from app.db.session import SessionLocal
 from app.models.booking import Booking
+from app.core.timezone import now_local_naive, to_local_naive
 
 scheduler = AsyncIOScheduler()
 JOB_ID = "booking_status_reconcile"
 UPCOMING_STATUSES = ["upcoming", "upcomming"]
-MOSCOW_TZ = ZoneInfo("Europe/Moscow")
-
-
-def _now_moscow_naive() -> datetime:
-    # Use explicit Moscow local time for all scheduler comparisons.
-    return datetime.now(MOSCOW_TZ).replace(tzinfo=None)
-
-
-def _as_moscow_naive(dt: datetime) -> datetime:
-    if dt.tzinfo is None:
-        # Existing DB values are treated as Moscow local wall time.
-        return dt
-    return dt.astimezone(MOSCOW_TZ).replace(tzinfo=None)
 
 
 def reconcile_booking_statuses():
     db = SessionLocal()
     try:
-        now = _now_moscow_naive()
+        now = now_local_naive()
 
         # Normalize legacy typo statuses so downstream filters are consistent.
         typo_upcoming = db.query(Booking).filter(Booking.status == "upcomming").all()
@@ -43,7 +30,7 @@ def reconcile_booking_statuses():
 
         upcoming_bookings = []
         for booking in scheduled_candidates:
-            booking_start = _as_moscow_naive(booking.start_time)
+            booking_start = to_local_naive(booking.start_time)
             # Keep explicit same-day rule while avoiding brittle SQL date comparisons.
             if (
                 booking_start.date() == now.date()
@@ -66,7 +53,7 @@ def reconcile_booking_statuses():
         ).all()
         in_progress_candidates = []
         for booking in in_progress_bookings:
-            booking_start = _as_moscow_naive(booking.start_time)
+            booking_start = to_local_naive(booking.start_time)
             if booking_start <= now:
                 in_progress_candidates.append(booking)
 
@@ -81,7 +68,7 @@ def reconcile_booking_statuses():
         ).all()
         completed_candidates = []
         for booking in completed_bookings:
-            booking_end = _as_moscow_naive(booking.end_time)
+            booking_end = to_local_naive(booking.end_time)
             if booking_end <= now:
                 completed_candidates.append(booking)
 

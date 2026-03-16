@@ -1,17 +1,12 @@
 from sqlalchemy.orm import Session
 from datetime import datetime, time, timedelta
 from typing import List, Tuple
-from zoneinfo import ZoneInfo
 from app.models.schedule import Schedule
 from app.models.booking import Booking
+from app.core.timezone import now_local_naive
 
 
 ACTIVE_SLOT_STATUSES = ["scheduled", "upcoming", "in_progress"]
-MOSCOW_TZ = ZoneInfo("Europe/Moscow")
-
-
-def _now_moscow_naive() -> datetime:
-    return datetime.now(MOSCOW_TZ).replace(tzinfo=None)
 
 
 def _ceil_to_quarter_hour(dt: datetime) -> datetime:
@@ -30,7 +25,7 @@ def _is_conflict(candidate: datetime, candidate_end: datetime, intervals: List[T
 
 
 def get_available_slots(db: Session, employee_id: int, service_duration: int, date: datetime.date) -> List[datetime]:
-    now = _now_moscow_naive()
+    now = now_local_naive()
     today = now.date()
     if date < today:
         return []

@@ -4,6 +4,8 @@ services:
   postgres:
     image: postgres:15
     environment:
+      TZ: ${TZ:-Europe/Moscow}
+      PGTZ: ${TZ:-Europe/Moscow}
       POSTGRES_DB: ${POSTGRES_DB:-beauty_salon}
       POSTGRES_USER: ${POSTGRES_USER:-user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
@@ -18,6 +20,7 @@ services:
     env_file:
       - .env
     environment:
+      - TZ=${TZ:-Europe/Moscow}
       - DATABASE_URL=${DATABASE_URL:-postgresql://user:password@postgres:5432/beauty_salon}
       - SECRET_KEY=${SECRET_KEY:-your_secret_key}
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
@@ -34,6 +37,7 @@ services:
     env_file:
       - .env
     environment:
+      - TZ=${TZ:-Europe/Moscow}
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - TELEGRAM_SOCKS_LINK=${TELEGRAM_SOCKS_LINK:-https://t.me/socks?server=94.228.123.201&port=1080&user=tgproxy&pass=VMf-945-nuI-k}
     depends_on:
@@ -49,6 +53,7 @@ services:
     env_file:
       - .env
     environment:
+      - TZ=${TZ:-Europe/Moscow}
       - KEY=${DIRECTUS_KEY:-your_directus_key}
       - SECRET=${DIRECTUS_SECRET:-your_directus_secret}
       - DB_CLIENT=pg

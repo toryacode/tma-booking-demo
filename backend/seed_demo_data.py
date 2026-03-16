@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from datetime import datetime, timedelta, time
 from app.db.session import SessionLocal
+from app.core.timezone import now_local_naive
 from app.models.employee import Employee
 from app.models.service import Service
 from app.models.schedule import Schedule
@@ -79,7 +80,7 @@ def seed_demo_data():
 
     # Add one example booking if none exists
     if db.query(Booking).count() == 0 and employees and services:
-        booking_start = datetime.utcnow() + timedelta(days=1)
+        booking_start = now_local_naive() + timedelta(days=1)
         booking_end = booking_start + timedelta(minutes=services[0].duration)
         booking = Booking(
             user_id='demo_user',
