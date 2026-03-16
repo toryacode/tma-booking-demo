@@ -1,11 +1,17 @@
 from sqlalchemy.orm import Session
 from datetime import datetime, time, timedelta
 from typing import List, Tuple
+from zoneinfo import ZoneInfo
 from app.models.schedule import Schedule
 from app.models.booking import Booking
 
 
 ACTIVE_SLOT_STATUSES = ["scheduled", "upcoming", "in_progress"]
+MOSCOW_TZ = ZoneInfo("Europe/Moscow")
+
+
+def _now_moscow_naive() -> datetime:
+    return datetime.now(MOSCOW_TZ).replace(tzinfo=None)
 
 
 def _ceil_to_quarter_hour(dt: datetime) -> datetime:
@@ -24,7 +30,8 @@ def _is_conflict(candidate: datetime, candidate_end: datetime, intervals: List[T
 
 
 def get_available_slots(db: Session, employee_id: int, service_duration: int, date: datetime.date) -> List[datetime]:
-    today = datetime.now().date()
+    now = _now_moscow_naive()
+    today = now.date()
     if date < today:
         return []
 
@@ -57,7 +64,7 @@ def get_available_slots(db: Session, employee_id: int, service_duration: int, da
     available_slots: List[datetime] = []
     candidate = start_dt
     if date == today:
-        candidate = max(candidate, _ceil_to_quarter_hour(datetime.now()))
+        candidate = max(candidate, _ceil_to_quarter_hour(now))
 
     while candidate + timedelta(minutes=service_duration) <= end_dt:
         candidate_end = candidate + timedelta(minutes=service_duration)
@@ -66,8 +73,6 @@ def get_available_slots(db: Session, employee_id: int, service_duration: int, da
             available_slots.append(candidate)
 
         candidate += timedelta(minutes=15)
-
-    print(f"[slot_service] date={date} employee={employee_id} duration={service_duration} intervals={[ (s.strftime('%H:%M'), e.strftime('%H:%M')) for s,e in intervals ]} available={[t.strftime('%H:%M') for t in available_slots]}")
 
     return available_slots
 

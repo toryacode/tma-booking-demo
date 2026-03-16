@@ -1,10 +1,18 @@
 from sqlalchemy.orm import Session, joinedload
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from app.models.booking import Booking
 from app.models.service import Service
 from app.schemas.booking import BookingCreate
 from app.services.reminder_service import send_booking_confirmation
 from app.services.slot_service import is_slot_available
+
+
+MOSCOW_TZ = ZoneInfo("Europe/Moscow")
+
+
+def _now_moscow_naive() -> datetime:
+    return datetime.now(MOSCOW_TZ).replace(tzinfo=None)
 
 
 def create_booking(db: Session, booking: BookingCreate):
@@ -18,7 +26,7 @@ def create_booking(db: Session, booking: BookingCreate):
     if booking.end_time.tzinfo is not None:
         booking.end_time = booking.end_time.replace(tzinfo=None)
 
-    now = datetime.now()
+    now = _now_moscow_naive()
     if booking.start_time < now:
         raise ValueError('Cannot create booking in the past')
     if booking.end_time <= booking.start_time:
@@ -71,7 +79,7 @@ def reschedule_booking(db: Session, booking_id: int, user_id: str, new_start_tim
     if new_end_time.tzinfo is not None:
         new_end_time = new_end_time.replace(tzinfo=None)
 
-    now = datetime.now()
+    now = _now_moscow_naive()
     if new_start_time < now:
         raise ValueError('Cannot reschedule booking to the past')
     if new_end_time <= new_start_time:

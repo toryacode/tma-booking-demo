@@ -10,6 +10,16 @@ const formatDateForInput = (dateObj: Date) => {
   return `${dateObj.getFullYear()}-${pad(dateObj.getMonth() + 1)}-${pad(dateObj.getDate())}`;
 };
 
+const ceilToQuarterHour = (dateObj: Date) => {
+  const next = new Date(dateObj);
+  next.setSeconds(0, 0);
+  const remainder = next.getMinutes() % 15;
+  if (remainder !== 0) {
+    next.setMinutes(next.getMinutes() + (15 - remainder));
+  }
+  return next;
+};
+
 const Booking = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -27,6 +37,15 @@ const Booking = () => {
   const todayDate = formatDateForInput(new Date());
   const normalizedEmployeeAvatar = normalizeImageUrl(employee?.avatar);
   const [employeeAvatarError, setEmployeeAvatarError] = useState(false);
+
+  const filterPastSlots = (nextDate: string, nextSlots: string[]) => {
+    if (nextDate !== todayDate) {
+      return nextSlots;
+    }
+
+    const nowCutoff = ceilToQuarterHour(new Date()).getTime();
+    return nextSlots.filter((slot) => new Date(slot).getTime() >= nowCutoff);
+  };
 
   useEffect(() => {
     setEmployeeAvatarError(false);
@@ -72,8 +91,10 @@ const Booking = () => {
           const data = await getEmployeeSlots(employeeId, serviceId, candidateDate);
           if (!active) return;
 
-          if ((data.slots || []).length > 0) {
-            setSlots(data.slots || []);
+          const nextSlots = filterPastSlots(candidateDate, data.slots || []);
+
+          if (nextSlots.length > 0) {
+            setSlots(nextSlots);
             setSelectedSlot('');
             setDate(candidateDate);
             return;
@@ -111,7 +132,7 @@ const Booking = () => {
       setError('');
       setSelectedSlot('');
       getEmployeeSlots(employeeId, serviceId, date)
-        .then(data => setSlots(data.slots || []))
+        .then(data => setSlots(filterPastSlots(date, data.slots || [])))
         .catch(err => {
           console.error('Failed to fetch slots', err);
           setError('Unable to load available slots.');
