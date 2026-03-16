@@ -18,3 +18,4 @@ class Booking(Base):
 
     service = relationship("Service", back_populates="bookings")
     employee = relationship("Employee", back_populates="bookings")
+    review = relationship("Review", back_populates="booking", uselist=False)

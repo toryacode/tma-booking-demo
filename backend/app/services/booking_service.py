@@ -3,7 +3,6 @@ from datetime import datetime
 from app.models.booking import Booking
 from app.models.service import Service
 from app.schemas.booking import BookingCreate
-from app.core.scheduler import schedule_booking_lifecycle, cancel_booking_lifecycle_jobs
 from app.services.reminder_service import send_booking_confirmation
 from app.services.slot_service import is_slot_available
 
@@ -44,9 +43,6 @@ def create_booking(db: Session, booking: BookingCreate):
     # Load relations for response
     db_booking = db.query(Booking).options(joinedload(Booking.service), joinedload(Booking.employee)).get(db_booking.id)
 
-    # Schedule full lifecycle transitions and reminder
-    schedule_booking_lifecycle(db_booking.id, db_booking.start_time, db_booking.end_time)
-
     # Send confirmation
     send_booking_confirmation(db_booking.id)
 
@@ -62,7 +58,6 @@ def cancel_booking(db: Session, booking_id: int, user_id: str):
     
     booking.status = "cancelled"
     db.commit()
-    cancel_booking_lifecycle_jobs(booking.id)
     return booking
 
 
@@ -96,10 +91,6 @@ def reschedule_booking(db: Session, booking_id: int, user_id: str, new_start_tim
     booking.start_time = new_start_time
     booking.end_time = new_end_time
     db.commit()
-
-    # Reschedule lifecycle jobs and reminder
-    cancel_booking_lifecycle_jobs(booking.id)
-    schedule_booking_lifecycle(booking.id, booking.start_time, booking.end_time)
     
     return booking
 

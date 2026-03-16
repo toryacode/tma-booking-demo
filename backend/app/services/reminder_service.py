@@ -7,7 +7,7 @@ def send_reminder(booking_id: int):
     db = SessionLocal()
     try:
         booking = db.query(Booking).filter(Booking.id == booking_id).first()
-        if booking and booking.status == "scheduled":
+        if booking and booking.status == "upcoming":
             message = f"Reminder: You have a booking for {booking.service.name} with {booking.employee.name} at {booking.start_time.strftime('%H:%M')}."
             send_message(booking.user_id, message)
     finally:

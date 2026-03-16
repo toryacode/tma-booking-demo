@@ -42,6 +42,22 @@ export const rescheduleBooking = async (bookingId: number, newStartTime: string,
   return response.data;
 };
 
+export const getBookingReview = async (bookingId: number) => {
+  const headers = getAuthHeaders();
+  const response = await axios.get(`${API_BASE}/bookings/${bookingId}/review`, { headers });
+  return response.data;
+};
+
+export const submitBookingReview = async (bookingId: number, rating: number, review?: string) => {
+  const headers = getAuthHeaders();
+  const response = await axios.post(
+    `${API_BASE}/bookings/${bookingId}/review`,
+    { rating, review: review || null },
+    { headers },
+  );
+  return response.data;
+};
+
 export const getEmployeeSlots = async (employeeId: number, serviceId: number, date: string) => {
   const headers = getAuthHeaders();
   const response = await axios.get(`${API_BASE}/employees/${employeeId}/slots`, {

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { cancelBooking, getMyBookings } from '../api/bookings';
+import { cancelBooking, getBookingReview, getMyBookings, submitBookingReview } from '../api/bookings';
 import BookingStatusChip from '../components/booking/BookingStatusChip';
 import { normalizeImageUrl } from '../utils/image';
 
@@ -22,6 +22,15 @@ interface BookingDetailsData {
   status: string;
 }
 
+interface BookingReviewData {
+  id: number;
+  booking_id: number;
+  user_id: string;
+  rating: number;
+  review?: string | null;
+  review_date: string;
+}
+
 const BookingDetails = () => {
   const navigate = useNavigate();
   const { bookingId } = useParams();
@@ -35,6 +44,12 @@ const BookingDetails = () => {
   const [cancelLoading, setCancelLoading] = useState(false);
   const [cancelError, setCancelError] = useState('');
   const [employeeAvatarError, setEmployeeAvatarError] = useState(false);
+  const [selectedRating, setSelectedRating] = useState(0);
+  const [reviewText, setReviewText] = useState('');
+  const [reviewSaving, setReviewSaving] = useState(false);
+  const [reviewError, setReviewError] = useState('');
+  const [reviewSuccess, setReviewSuccess] = useState('');
+  const [existingReview, setExistingReview] = useState<BookingReviewData | null>(null);
 
   useEffect(() => {
     if (booking) {
@@ -69,6 +84,27 @@ const BookingDetails = () => {
     void loadBooking();
   }, [booking, bookingId]);
 
+  useEffect(() => {
+    if (!booking || booking.status !== 'completed') {
+      return;
+    }
+
+    const loadReview = async () => {
+      try {
+        const data = (await getBookingReview(booking.id)) as BookingReviewData;
+        setExistingReview(data);
+        setSelectedRating(data.rating);
+        setReviewText(data.review || '');
+      } catch (err: any) {
+        if (err?.response?.status !== 404) {
+          console.error('Failed to load booking review', err);
+        }
+      }
+    };
+
+    void loadReview();
+  }, [booking]);
+
   const start = booking ? new Date(booking.start_time) : null;
   const end = booking?.end_time ? new Date(booking.end_time) : null;
   const canCancel = booking?.status === 'scheduled' || booking?.status === 'upcoming';
@@ -94,6 +130,31 @@ const BookingDetails = () => {
       setCancelError(backendMessage || 'Failed to cancel booking.');
     } finally {
       setCancelLoading(false);
+    }
+  };
+
+  const handleSubmitReview = async () => {
+    if (!booking || booking.status !== 'completed') {
+      return;
+    }
+    if (selectedRating < 1 || selectedRating > 5) {
+      setReviewError('Please choose a rating from 1 to 5 stars.');
+      return;
+    }
+
+    setReviewSaving(true);
+    setReviewError('');
+    setReviewSuccess('');
+    try {
+      const data = (await submitBookingReview(booking.id, selectedRating, reviewText.trim())) as BookingReviewData;
+      setExistingReview(data);
+      setReviewSuccess('Thanks! Your rating has been saved.');
+    } catch (err: any) {
+      console.error('Failed to submit booking review', err);
+      const backendMessage = err?.response?.data?.detail;
+      setReviewError(backendMessage || 'Failed to save review.');
+    } finally {
+      setReviewSaving(false);
     }
   };
 
@@ -221,6 +282,52 @@ const BookingDetails = () => {
                     Back
                   </button>
                 </div>
+              </div>
+            )}
+
+            {booking.status === 'completed' && (
+              <div className="mt-6 rounded-2xl border border-slate-200 p-4 dark:border-slate-700">
+                <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">Rate your visit</p>
+                <div className="mt-3 flex items-center gap-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => {
+                        setSelectedRating(star);
+                        setReviewError('');
+                        setReviewSuccess('');
+                      }}
+                      className="text-2xl leading-none"
+                      aria-label={`Rate ${star} star${star === 1 ? '' : 's'}`}
+                    >
+                      <span className={selectedRating >= star ? 'text-amber-400' : 'text-slate-300 dark:text-slate-600'}>★</span>
+                    </button>
+                  ))}
+                </div>
+
+                {selectedRating > 0 && (
+                  <div className="mt-4">
+                    <textarea
+                      value={reviewText}
+                      onChange={(e) => setReviewText(e.target.value)}
+                      rows={3}
+                      placeholder="Optional: share your experience"
+                      className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-blue-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleSubmitReview}
+                      disabled={reviewSaving}
+                      className={`mt-3 rounded-xl px-4 py-2 text-sm font-semibold text-white ${reviewSaving ? 'cursor-not-allowed bg-slate-400' : 'bg-blue-600 hover:bg-blue-700'}`}
+                    >
+                      {reviewSaving ? 'Saving...' : existingReview ? 'Update Rating' : 'Confirm Rating'}
+                    </button>
+                  </div>
+                )}
+
+                {reviewError && <p className="mt-3 text-sm text-rose-500">{reviewError}</p>}
+                {reviewSuccess && <p className="mt-3 text-sm text-emerald-600 dark:text-emerald-300">{reviewSuccess}</p>}
               </div>
             )}
           </div>

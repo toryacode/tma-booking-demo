@@ -4,7 +4,9 @@ from datetime import datetime
 from typing import Optional
 from app.db.session import get_db
 from app.models.booking import Booking
+from app.models.review import Review as ReviewModel
 from app.schemas.booking import BookingCreate, Booking as BookingSchema
+from app.schemas.review import ReviewCreate, Review as ReviewSchema
 from app.services.booking_service import create_booking, cancel_booking, reschedule_booking, get_user_bookings
 from app.core.security import verify_token
 
@@ -72,3 +74,52 @@ def get_my_bookings(
     user_id: str = Depends(get_current_user)
 ):
     return get_user_bookings(db, user_id)
+
+
+@router.get("/bookings/{booking_id}/review", response_model=ReviewSchema)
+def get_booking_review(
+    booking_id: int,
+    db: Session = Depends(get_db),
+    user_id: str = Depends(get_current_user)
+):
+    booking = db.query(Booking).filter(Booking.id == booking_id, Booking.user_id == user_id).first()
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+
+    review = db.query(ReviewModel).filter(ReviewModel.booking_id == booking_id, ReviewModel.user_id == user_id).first()
+    if not review:
+        raise HTTPException(status_code=404, detail="Review not found")
+
+    return review
+
+
+@router.post("/bookings/{booking_id}/review", response_model=ReviewSchema)
+def create_or_update_booking_review(
+    booking_id: int,
+    payload: ReviewCreate,
+    db: Session = Depends(get_db),
+    user_id: str = Depends(get_current_user)
+):
+    booking = db.query(Booking).filter(Booking.id == booking_id, Booking.user_id == user_id).first()
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+
+    if booking.status != "completed":
+        raise HTTPException(status_code=400, detail="Only completed bookings can be reviewed")
+
+    review = db.query(ReviewModel).filter(ReviewModel.booking_id == booking_id, ReviewModel.user_id == user_id).first()
+    if not review:
+        review = ReviewModel(
+            booking_id=booking_id,
+            user_id=user_id,
+            rating=payload.rating,
+            review=payload.review,
+        )
+        db.add(review)
+    else:
+        review.rating = payload.rating
+        review.review = payload.review
+
+    db.commit()
+    db.refresh(review)
+    return review
