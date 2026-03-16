@@ -50,8 +50,8 @@ const BookingDetails = () => {
   const [reviewText, setReviewText] = useState('');
   const [reviewSaving, setReviewSaving] = useState(false);
   const [reviewError, setReviewError] = useState('');
-  const [reviewSuccess, setReviewSuccess] = useState('');
   const [existingReview, setExistingReview] = useState<BookingReviewData | null>(null);
+  const [reviewEditing, setReviewEditing] = useState(false);
 
   useEffect(() => {
     if (booking) {
@@ -99,6 +99,7 @@ const BookingDetails = () => {
         setExistingReview(data);
         setSelectedRating(data.rating);
         setReviewText(data.review || '');
+        setReviewEditing(false);
       } catch (err: any) {
         if (err?.response?.status !== 404) {
           console.error('Failed to load booking review', err);
@@ -148,11 +149,11 @@ const BookingDetails = () => {
 
     setReviewSaving(true);
     setReviewError('');
-    setReviewSuccess('');
     try {
       const data = (await submitBookingReview(booking.id, selectedRating, reviewText.trim())) as BookingReviewData;
       setExistingReview(data);
-      setReviewSuccess('Thanks! Your rating has been saved.');
+      setReviewText(data.review || '');
+      setReviewEditing(false);
     } catch (err: any) {
       console.error('Failed to submit booking review', err);
       const backendMessage = err?.response?.data?.detail;
@@ -161,6 +162,10 @@ const BookingDetails = () => {
       setReviewSaving(false);
     }
   };
+
+  const reviewPostedDate = existingReview
+    ? new Date(existingReview.review_date).toLocaleDateString()
+    : '';
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white py-8 dark:from-slate-900 dark:to-slate-950">
@@ -291,16 +296,18 @@ const BookingDetails = () => {
 
             {normalizedBookingStatus === 'completed' && (
               <div className="mt-6 rounded-2xl border border-slate-200 p-4 dark:border-slate-700">
-                <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">Rate your visit</p>
+                <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">{existingReview ? 'Your review' : 'Rate your visit'}</p>
                 <div className="mt-3 flex items-center gap-1">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <button
                       key={star}
                       type="button"
                       onClick={() => {
+                        if (existingReview && !reviewEditing) {
+                          return;
+                        }
                         setSelectedRating(star);
                         setReviewError('');
-                        setReviewSuccess('');
                       }}
                       className="text-2xl leading-none"
                       aria-label={`Rate ${star} star${star === 1 ? '' : 's'}`}
@@ -308,9 +315,33 @@ const BookingDetails = () => {
                       <span className={selectedRating >= star ? 'text-amber-400' : 'text-slate-300 dark:text-slate-600'}>★</span>
                     </button>
                   ))}
+                  {existingReview && !reviewEditing && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setReviewEditing(true);
+                        setReviewError('');
+                      }}
+                      aria-label="Edit review"
+                      className="ml-2 inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:bg-slate-100 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+                    >
+                      <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" aria-hidden="true">
+                        <path d="M13.9 3.6a1.5 1.5 0 0 1 2.1 2.1l-8.3 8.3-3 0.9 0.9-3 8.3-8.3Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </button>
+                  )}
                 </div>
 
-                {selectedRating > 0 && (
+                {existingReview && !reviewEditing && (
+                  <div className="mt-4 rounded-xl bg-slate-50 p-3 dark:bg-slate-900/60">
+                    {existingReview.review && (
+                      <p className="text-sm text-slate-700 dark:text-slate-200">{existingReview.review}</p>
+                    )}
+                    <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">Posted on: {reviewPostedDate}</p>
+                  </div>
+                )}
+
+                {selectedRating > 0 && (!existingReview || reviewEditing) && (
                   <div className="mt-4">
                     <textarea
                       value={reviewText}
@@ -327,11 +358,25 @@ const BookingDetails = () => {
                     >
                       {reviewSaving ? 'Saving...' : existingReview ? 'Update Rating' : 'Confirm Rating'}
                     </button>
+                    {existingReview && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setReviewEditing(false);
+                          setSelectedRating(existingReview.rating);
+                          setReviewText(existingReview.review || '');
+                          setReviewError('');
+                        }}
+                        disabled={reviewSaving}
+                        className="ml-2 mt-3 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                      >
+                        Cancel
+                      </button>
+                    )}
                   </div>
                 )}
 
                 {reviewError && <p className="mt-3 text-sm text-rose-500">{reviewError}</p>}
-                {reviewSuccess && <p className="mt-3 text-sm text-emerald-600 dark:text-emerald-300">{reviewSuccess}</p>}
               </div>
             )}
           </div>
