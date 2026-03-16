@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Header, Response
+from fastapi import APIRouter, Depends, HTTPException, Header
 from sqlalchemy.orm import Session, joinedload
 from datetime import datetime
 from typing import Optional
@@ -10,7 +10,6 @@ from app.schemas.review import ReviewCreate, Review as ReviewSchema, ReviewWithB
 from app.services.booking_service import create_booking, cancel_booking, reschedule_booking, get_user_bookings
 from app.core.security import verify_token
 from app.core.scheduler import reconcile_booking_statuses
-from app.utils.calendar import build_booking_ics, build_booking_ics_filename
 
 router = APIRouter()
 
@@ -94,30 +93,6 @@ def get_my_reviews(
         .filter(ReviewModel.user_id == user_id)
         .order_by(ReviewModel.review_date.desc())
         .all()
-    )
-
-
-@router.get("/bookings/{booking_id}/calendar")
-def download_booking_calendar(
-    booking_id: int,
-    db: Session = Depends(get_db),
-    user_id: str = Depends(get_current_user)
-):
-    booking = (
-        db.query(Booking)
-        .options(joinedload(Booking.service), joinedload(Booking.employee))
-        .filter(Booking.id == booking_id, Booking.user_id == user_id)
-        .first()
-    )
-    if not booking:
-        raise HTTPException(status_code=404, detail="Booking not found")
-
-    ics_content = build_booking_ics(booking)
-    filename = build_booking_ics_filename(booking)
-    return Response(
-        content=ics_content,
-        media_type="text/calendar; charset=utf-8",
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
 
 

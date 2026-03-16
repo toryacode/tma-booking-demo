@@ -1,7 +1,7 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { normalizeImageUrl } from '../utils/image';
-import { cancelBooking, downloadBookingCalendar } from '../api/bookings';
+import { cancelBooking } from '../api/bookings';
 import BookingStatusChip from '../components/booking/BookingStatusChip';
 
 type BookingSuccessState = {
@@ -25,8 +25,6 @@ const Success = () => {
   const [cancelLoading, setCancelLoading] = useState(false);
   const [cancelError, setCancelError] = useState('');
   const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
-  const [calendarLoading, setCalendarLoading] = useState(false);
-  const [calendarError, setCalendarError] = useState('');
 
   useEffect(() => {
     setEmployeeAvatarError(false);
@@ -51,23 +49,6 @@ const Success = () => {
       setCancelError(backendMessage || 'Failed to cancel booking.');
     } finally {
       setCancelLoading(false);
-    }
-  };
-
-  const handleAddToCalendar = async () => {
-    if (!booking) {
-      return;
-    }
-
-    setCalendarLoading(true);
-    setCalendarError('');
-    try {
-      await downloadBookingCalendar(booking.id);
-    } catch (err) {
-      console.error('Failed to download booking calendar from success page', err);
-      setCalendarError('Failed to download calendar file.');
-    } finally {
-      setCalendarLoading(false);
     }
   };
 
@@ -166,19 +147,8 @@ const Success = () => {
           </div>
 
           {cancelError && <p className="mt-4 text-rose-500">{cancelError}</p>}
-          {calendarError && <p className="mt-4 text-rose-500">{calendarError}</p>}
 
           <div className="mt-6 flex flex-wrap gap-2">
-            {booking.status !== 'cancelled' && booking.status !== 'canceled' && (
-              <button
-                onClick={handleAddToCalendar}
-                disabled={calendarLoading}
-                className={`rounded-2xl px-5 py-2 text-white ${calendarLoading ? 'cursor-not-allowed bg-slate-400' : 'bg-slate-700 hover:bg-slate-800 dark:bg-slate-600 dark:hover:bg-slate-500'}`}
-              >
-                {calendarLoading ? 'Preparing...' : 'Add to Calendar'}
-              </button>
-            )}
-
             <button
               onClick={() => navigate('/history')}
               className="rounded-2xl bg-green-600 px-5 py-2 text-white hover:bg-green-700"

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { cancelBooking, downloadBookingCalendar, getBookingReview, getMyBookings, submitBookingReview } from '../api/bookings';
+import { cancelBooking, getBookingReview, getMyBookings, submitBookingReview } from '../api/bookings';
 import BookingStatusChip from '../components/booking/BookingStatusChip';
 import { normalizeImageUrl } from '../utils/image';
 
@@ -45,8 +45,6 @@ const BookingDetails = () => {
   const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
   const [cancelError, setCancelError] = useState('');
-  const [calendarLoading, setCalendarLoading] = useState(false);
-  const [calendarError, setCalendarError] = useState('');
   const [employeeAvatarError, setEmployeeAvatarError] = useState(false);
   const [selectedRating, setSelectedRating] = useState(0);
   const [reviewText, setReviewText] = useState('');
@@ -137,23 +135,6 @@ const BookingDetails = () => {
       setCancelError(backendMessage || 'Failed to cancel booking.');
     } finally {
       setCancelLoading(false);
-    }
-  };
-
-  const handleAddToCalendar = async () => {
-    if (!booking) {
-      return;
-    }
-
-    setCalendarLoading(true);
-    setCalendarError('');
-    try {
-      await downloadBookingCalendar(booking.id);
-    } catch (err) {
-      console.error('Failed to download booking calendar', err);
-      setCalendarError('Failed to download calendar file.');
-    } finally {
-      setCalendarLoading(false);
     }
   };
 
@@ -267,21 +248,8 @@ const BookingDetails = () => {
             {cancelError && (
               <p className="mt-4 text-rose-500">{cancelError}</p>
             )}
-            {calendarError && (
-              <p className="mt-4 text-rose-500">{calendarError}</p>
-            )}
 
             <div className="mt-5 flex flex-wrap gap-2">
-              {normalizedBookingStatus !== 'cancelled' && normalizedBookingStatus !== 'canceled' && (
-                <button
-                  onClick={handleAddToCalendar}
-                  disabled={calendarLoading}
-                  className={`rounded-2xl px-5 py-2 text-sm font-semibold text-white transition ${calendarLoading ? 'cursor-not-allowed bg-slate-400' : 'bg-slate-700 hover:bg-slate-800 dark:bg-slate-600 dark:hover:bg-slate-500'}`}
-                >
-                  {calendarLoading ? 'Preparing...' : 'Add to Calendar'}
-                </button>
-              )}
-
               {canReschedule && !confirmCancelOpen && (
                 <button
                   onClick={() => navigate(`/bookings/${booking.id}/reschedule`, { state: { booking } })}
