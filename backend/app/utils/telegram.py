@@ -1,5 +1,5 @@
 import requests
-from urllib.parse import parse_qs, unquote, urlparse
+from urllib.parse import parse_qs, urlencode, unquote, urlparse, urlunparse
 from app.core.config import settings
 
 
@@ -32,7 +32,19 @@ def _resolve_proxy_url() -> str | None:
     return _proxy_url_from_tg_socks_link(settings.telegram_socks_link)
 
 
-def send_message(chat_id: str, text: str):
+def _build_booking_webapp_url(booking_id: int) -> str | None:
+    base_url = settings.webapp_url
+    if not base_url:
+        return None
+
+    parsed = urlparse(base_url)
+    existing_params = dict(parse_qs(parsed.query, keep_blank_values=True))
+    existing_params["booking_id"] = [str(booking_id)]
+    query = urlencode(existing_params, doseq=True)
+    return urlunparse((parsed.scheme, parsed.netloc, parsed.path, parsed.params, query, parsed.fragment))
+
+
+def send_message(chat_id: str, text: str, booking_id: int | None = None, button_text: str | None = None):
     effective_chat = chat_id or settings.telegram_default_chat_id
     if not effective_chat:
         print("Telegram send skipped: no chat_id available")
@@ -40,6 +52,14 @@ def send_message(chat_id: str, text: str):
 
     url = f"https://api.telegram.org/bot{settings.telegram_bot_token}/sendMessage"
     data = {"chat_id": effective_chat, "text": text}
+    webapp_url = _build_booking_webapp_url(booking_id) if booking_id is not None else None
+    if webapp_url:
+        data["reply_markup"] = {
+            "inline_keyboard": [[{
+                "text": button_text or "Open booking",
+                "web_app": {"url": webapp_url},
+            }]]
+        }
     proxy_url = _resolve_proxy_url()
     proxies = None
     if proxy_url:
@@ -48,7 +68,7 @@ def send_message(chat_id: str, text: str):
     try:
         response = requests.post(
             url,
-            data=data,
+            json=data,
             timeout=settings.telegram_request_timeout_seconds,
             proxies=proxies,
         )

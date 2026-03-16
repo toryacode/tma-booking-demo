@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, NavLink, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useState } from 'react';
 import Home from './pages/Home';
@@ -23,6 +23,7 @@ const getDisplayName = (user: MeResponse | null) => {
 
 function AppRouter() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState<MeResponse | null>(null);
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const stored = localStorage.getItem('tma_theme');
@@ -137,6 +138,16 @@ function AppRouter() {
       window.history.replaceState({}, document.title, u.toString());
     }
   }, [location.search]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const bookingId = params.get('booking_id');
+    if (!bookingId) {
+      return;
+    }
+
+    navigate(`/bookings/${bookingId}`, { replace: true });
+  }, [location.search, navigate]);
 
   const avatarSrc = currentUser?.photo_url;
   const normalizedAvatarSrc = normalizeImageUrl(avatarSrc);

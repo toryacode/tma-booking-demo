@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     telegram_bot_token: str = ""
     telegram_bot_username: str = ""
     telegram_default_chat_id: Optional[str] = None
+    webapp_url: Optional[str] = None
     telegram_proxy_url: Optional[str] = None
     telegram_socks_link: Optional[str] = None
     telegram_request_timeout_seconds: int = 15

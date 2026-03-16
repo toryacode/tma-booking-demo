@@ -9,7 +9,7 @@ def send_reminder(booking_id: int):
         booking = db.query(Booking).filter(Booking.id == booking_id).first()
         if booking and booking.status == "upcoming":
             message = f"Reminder: You have a booking for {booking.service.name} with {booking.employee.name} at {booking.start_time.strftime('%H:%M')}."
-            send_message(booking.user_id, message)
+            send_message(booking.user_id, message, booking_id=booking.id, button_text="Open booking")
     finally:
         db.close()
 
@@ -28,6 +28,6 @@ def send_booking_confirmation(booking_id: int):
                 f"Booking confirmed: {service_name} with {employee_name} on {start}. "
                 f"Duration: {duration} min, Price: ${price:.2f}."
             )
-            send_message(booking.user_id, message)
+            send_message(booking.user_id, message, booking_id=booking.id, button_text="View details")
     finally:
         db.close()
