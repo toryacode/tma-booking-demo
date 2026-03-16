@@ -1,6 +1,7 @@
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 from app.services.reminder_service import send_reminder
 from app.db.session import SessionLocal
 from app.models.booking import Booking
@@ -8,6 +9,7 @@ from app.models.booking import Booking
 scheduler = AsyncIOScheduler()
 JOB_ID = "booking_status_reconcile"
 UPCOMING_STATUSES = ["upcoming", "upcomming"]
+MOSCOW_TZ = ZoneInfo("Europe/Moscow")
 
 
 def _log(message: str):
@@ -15,17 +17,32 @@ def _log(message: str):
 
 
 def _booking_row(booking: Booking) -> str:
+    start_local = _as_moscow_naive(booking.start_time)
+    end_local = _as_moscow_naive(booking.end_time)
     return (
         f"id={booking.id} user={booking.user_id} status={booking.status} "
-        f"start={booking.start_time.isoformat()} end={booking.end_time.isoformat()}"
+        f"start={start_local.isoformat()} end={end_local.isoformat()}"
     )
+
+
+def _now_moscow_naive() -> datetime:
+    # Use explicit Moscow local time for all scheduler comparisons.
+    return datetime.now(MOSCOW_TZ).replace(tzinfo=None)
+
+
+def _as_moscow_naive(dt: datetime) -> datetime:
+    if dt.tzinfo is None:
+        # Existing DB values are treated as Moscow local wall time.
+        return dt
+    return dt.astimezone(MOSCOW_TZ).replace(tzinfo=None)
 
 
 def reconcile_booking_statuses():
     db = SessionLocal()
     try:
-        now = datetime.now()
-        _log(f"run started at {now.isoformat()}")
+        now = _now_moscow_naive()
+        now_utc = datetime.utcnow()
+        _log(f"run started now_moscow={now.isoformat()} now_utc={now_utc.isoformat()}")
 
         raw_bookings = db.query(Booking).filter(
             Booking.status.in_(["scheduled", "upcoming", "upcomming", "in_progress"])
@@ -45,17 +62,21 @@ def reconcile_booking_statuses():
         # 1) scheduled -> upcoming (starts within next 15 minutes, but not already started)
         scheduled_candidates = db.query(Booking).filter(
             Booking.status == "scheduled",
-            Booking.start_time > now,
-            Booking.start_time <= now + timedelta(minutes=15),
         ).all()
-        _log(f"scheduled->upcoming candidates={len(scheduled_candidates)}")
+        _log(f"scheduled base candidates={len(scheduled_candidates)}")
 
         upcoming_bookings = []
         for booking in scheduled_candidates:
+            booking_start = _as_moscow_naive(booking.start_time)
             # Keep explicit same-day rule while avoiding brittle SQL date comparisons.
-            if booking.start_time.date() == now.date():
+            if (
+                booking_start.date() == now.date()
+                and booking_start > now
+                and booking_start <= now + timedelta(minutes=15)
+            ):
                 upcoming_bookings.append(booking)
 
+        _log(f"scheduled->upcoming candidates={len(upcoming_bookings)}")
         for booking in upcoming_bookings:
             booking.status = "upcoming"
 
@@ -71,29 +92,39 @@ def reconcile_booking_statuses():
         # 2) scheduled/upcoming -> in_progress (booking already started)
         in_progress_bookings = db.query(Booking).filter(
             Booking.status.in_(["scheduled", *UPCOMING_STATUSES]),
-            Booking.start_time <= now,
         ).all()
-        _log(f"*->in_progress candidates={len(in_progress_bookings)}")
+        in_progress_candidates = []
         for booking in in_progress_bookings:
+            booking_start = _as_moscow_naive(booking.start_time)
+            if booking_start <= now:
+                in_progress_candidates.append(booking)
+
+        _log(f"*->in_progress candidates={len(in_progress_candidates)}")
+        for booking in in_progress_candidates:
             booking.status = "in_progress"
 
         db.commit()
-        _log(f"*->in_progress transitioned={len(in_progress_bookings)}")
-        for booking in in_progress_bookings:
+        _log(f"*->in_progress transitioned={len(in_progress_candidates)}")
+        for booking in in_progress_candidates:
             _log(f"transition to in_progress { _booking_row(booking) }")
 
         # 3) in_progress -> completed (booking ended)
         completed_bookings = db.query(Booking).filter(
             Booking.status == "in_progress",
-            Booking.end_time <= now,
         ).all()
-        _log(f"in_progress->completed candidates={len(completed_bookings)}")
+        completed_candidates = []
         for booking in completed_bookings:
+            booking_end = _as_moscow_naive(booking.end_time)
+            if booking_end <= now:
+                completed_candidates.append(booking)
+
+        _log(f"in_progress->completed candidates={len(completed_candidates)}")
+        for booking in completed_candidates:
             booking.status = "completed"
 
         db.commit()
-        _log(f"in_progress->completed transitioned={len(completed_bookings)}")
-        for booking in completed_bookings:
+        _log(f"in_progress->completed transitioned={len(completed_candidates)}")
+        for booking in completed_candidates:
             _log(f"transition to completed { _booking_row(booking) }")
         _log("run finished")
     except Exception as err:
