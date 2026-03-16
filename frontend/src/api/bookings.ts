@@ -24,6 +24,25 @@ export const getMyBookings = async () => {
   return response.data;
 };
 
+export const downloadBookingCalendar = async (bookingId: number) => {
+  const headers = getAuthHeaders();
+  const response = await axios.get(`${API_BASE}/bookings/${bookingId}/calendar`, {
+    headers,
+    responseType: 'blob',
+  });
+
+  const blobUrl = window.URL.createObjectURL(response.data);
+  const link = document.createElement('a');
+  const disposition = response.headers['content-disposition'] as string | undefined;
+  const fileNameMatch = disposition?.match(/filename="?([^";]+)"?/i);
+  link.href = blobUrl;
+  link.download = fileNameMatch?.[1] || `booking-${bookingId}.ics`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(blobUrl);
+};
+
 export const getMyReviews = async () => {
   const headers = getAuthHeaders();
   const response = await axios.get(`${API_BASE}/bookings/reviews/my`, { headers });
