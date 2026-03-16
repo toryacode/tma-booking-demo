@@ -60,7 +60,7 @@ const History = () => {
   const sections: BookingSection[] = [
     {
       key: 'scheduled',
-      title: 'Scheduled, Upcoming & In Progress',
+      title: 'Scheduled',
       bookings: sortedBookings.filter(booking => ACTIVE_STATUSES.includes(normalizeStatus(booking.status))),
     },
     {

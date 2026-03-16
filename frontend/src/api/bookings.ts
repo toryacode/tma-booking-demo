@@ -24,6 +24,12 @@ export const getMyBookings = async () => {
   return response.data;
 };
 
+export const getMyReviews = async () => {
+  const headers = getAuthHeaders();
+  const response = await axios.get(`${API_BASE}/bookings/reviews/my`, { headers });
+  return response.data;
+};
+
 export const cancelBooking = async (bookingId: number) => {
   const headers = getAuthHeaders();
   const response = await axios.post(`${API_BASE}/bookings/${bookingId}/cancel`, {}, { headers });

@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, Header
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from datetime import datetime
 from typing import Optional
 from app.db.session import get_db
 from app.models.booking import Booking
 from app.models.review import Review as ReviewModel
 from app.schemas.booking import BookingCreate, Booking as BookingSchema
-from app.schemas.review import ReviewCreate, Review as ReviewSchema
+from app.schemas.review import ReviewCreate, Review as ReviewSchema, ReviewWithBooking
 from app.services.booking_service import create_booking, cancel_booking, reschedule_booking, get_user_bookings
 from app.core.security import verify_token
 from app.core.scheduler import reconcile_booking_statuses
@@ -76,6 +76,24 @@ def get_my_bookings(
 ):
     reconcile_booking_statuses()
     return get_user_bookings(db, user_id)
+
+
+@router.get("/bookings/reviews/my", response_model=list[ReviewWithBooking])
+def get_my_reviews(
+    db: Session = Depends(get_db),
+    user_id: str = Depends(get_current_user)
+):
+    reconcile_booking_statuses()
+    return (
+        db.query(ReviewModel)
+        .options(
+            joinedload(ReviewModel.booking).joinedload(Booking.service),
+            joinedload(ReviewModel.booking).joinedload(Booking.employee),
+        )
+        .filter(ReviewModel.user_id == user_id)
+        .order_by(ReviewModel.review_date.desc())
+        .all()
+    )
 
 
 @router.get("/bookings/{booking_id}/review", response_model=ReviewSchema)
