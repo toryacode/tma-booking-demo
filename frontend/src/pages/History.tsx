@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { getMyBookings } from '../api/bookings';
 import BookingStatusChip from '../components/booking/BookingStatusChip';
@@ -21,6 +21,7 @@ interface BookingSection {
 
 const normalizeStatus = (status: string) => status.trim().toLowerCase().replace(' ', '_');
 const ACTIVE_STATUSES = ['scheduled', 'upcoming', 'upcomming', 'in_progress', 'in progress'];
+const SECTION_PANEL_DURATION_MS = 420;
 
 const History = () => {
   const navigate = useNavigate();
@@ -31,6 +32,21 @@ const History = () => {
     scheduled: true,
     completed: false,
     canceled: false,
+  });
+  const [sectionContentVisible, setSectionContentVisible] = useState<Record<BookingSection['key'], boolean>>({
+    scheduled: false,
+    completed: false,
+    canceled: false,
+  });
+  const [sectionHeights, setSectionHeights] = useState<Record<BookingSection['key'], number>>({
+    scheduled: 0,
+    completed: 0,
+    canceled: 0,
+  });
+  const sectionContentRefs = useRef<Record<BookingSection['key'], HTMLDivElement | null>>({
+    scheduled: null,
+    completed: null,
+    canceled: null,
   });
 
   useEffect(() => {
@@ -82,6 +98,41 @@ const History = () => {
   const toggleSection = (sectionKey: BookingSection['key']) => {
     setOpenSections(prev => ({ ...prev, [sectionKey]: !prev[sectionKey] }));
   };
+
+  useLayoutEffect(() => {
+    setSectionHeights({
+      scheduled: openSections.scheduled ? (sectionContentRefs.current.scheduled?.offsetHeight ?? 0) : 0,
+      completed: openSections.completed ? (sectionContentRefs.current.completed?.offsetHeight ?? 0) : 0,
+      canceled: openSections.canceled ? (sectionContentRefs.current.canceled?.offsetHeight ?? 0) : 0,
+    });
+  }, [openSections, bookings]);
+
+  useEffect(() => {
+    const timers: number[] = [];
+
+    (Object.keys(openSections) as BookingSection['key'][]).forEach((key) => {
+      if (!openSections[key]) {
+        setSectionContentVisible((prev) => ({ ...prev, [key]: false }));
+        return;
+      }
+
+      const frameId = window.requestAnimationFrame(() => {
+        const timerId = window.setTimeout(() => {
+          setSectionContentVisible((prev) => ({ ...prev, [key]: true }));
+        }, 90);
+        timers.push(timerId);
+      });
+
+      timers.push(frameId);
+    });
+
+    return () => {
+      timers.forEach((id) => {
+        window.clearTimeout(id);
+        window.cancelAnimationFrame(id);
+      });
+    };
+  }, [openSections]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white py-8 dark:from-slate-900 dark:to-slate-950">
@@ -138,20 +189,43 @@ const History = () => {
                     </span>
                   </button>
 
-                  {openSections[section.key] && (
-                    <div className="mt-3 space-y-3">
+                  <div
+                    className="overflow-hidden transition-[height,opacity,margin] ease-out"
+                    style={{
+                      height: `${sectionHeights[section.key]}px`,
+                      opacity: openSections[section.key] ? 1 : 0,
+                      marginTop: openSections[section.key] ? '12px' : '0px',
+                      transitionDuration: `${SECTION_PANEL_DURATION_MS}ms`,
+                    }}
+                    aria-hidden={!openSections[section.key]}
+                  >
+                    <div
+                      ref={(node) => {
+                        sectionContentRefs.current[section.key] = node;
+                      }}
+                      className="space-y-3"
+                    >
                       {section.bookings.length === 0 && (
-                        <p className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500 dark:border-slate-600 dark:bg-slate-700/40 dark:text-slate-300">
+                        <p
+                          className={`rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500 transition-all ease-out dark:border-slate-600 dark:bg-slate-700/40 dark:text-slate-300 ${sectionContentVisible[section.key] ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'}`}
+                          style={{ transitionDuration: `${SECTION_PANEL_DURATION_MS}ms`, transitionDelay: '60ms' }}
+                        >
                           No bookings in this section.
                         </p>
                       )}
 
-                      {section.bookings.map(booking => (
+                      {section.bookings.map((booking, bookingIndex) => (
                         <Link
                           key={booking.id}
                           to={`/bookings/${booking.id}`}
                           state={{ booking }}
-                          className="block rounded-3xl bg-slate-50 p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:bg-slate-700/60"
+                          className={`block rounded-3xl bg-slate-50 p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:bg-slate-700/60 ${sectionContentVisible[section.key] ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'}`}
+                          style={{
+                            transitionProperty: 'opacity, transform, box-shadow',
+                            transitionDuration: `${SECTION_PANEL_DURATION_MS}ms`,
+                            transitionTimingFunction: 'cubic-bezier(0.22, 1, 0.36, 1)',
+                            transitionDelay: `${80 + Math.min(bookingIndex, 6) * 70}ms`,
+                          }}
                         >
                           <h3 className="text-xl font-semibold text-slate-800 dark:text-slate-100">{booking.service?.name || 'Unknown Service'}</h3>
                           <p className="text-slate-500 dark:text-slate-300">with {booking.employee?.name || 'Unknown Specialist'}</p>
@@ -162,7 +236,7 @@ const History = () => {
                         </Link>
                       ))}
                     </div>
-                  )}
+                  </div>
                 </div>
               </PageReveal>
             ))}

@@ -35,7 +35,7 @@ const getInitial = (user: MeResponse | null) => {
   return name.charAt(0).toUpperCase() || 'U';
 };
 
-const REVIEWS_PANEL_DURATION_MS = 330;
+const REVIEWS_PANEL_DURATION_MS = 420;
 
 const Profile = ({ user }: ProfileProps) => {
   const navigate = useNavigate();
@@ -86,7 +86,7 @@ const Profile = ({ user }: ProfileProps) => {
     const frameId = window.requestAnimationFrame(() => {
       timerId = window.setTimeout(() => {
         setReviewsContentVisible(true);
-      }, 70);
+      }, 90);
     });
 
     return () => {
