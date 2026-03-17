@@ -7,7 +7,7 @@ interface PageRevealProps {
   duration?: number;
 }
 
-const PageReveal = ({ children, className = '', delay = 0, duration = 220 }: PageRevealProps) => {
+const PageReveal = ({ children, className = '', delay = 0, duration = 330 }: PageRevealProps) => {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {

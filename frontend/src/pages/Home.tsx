@@ -41,6 +41,13 @@ const getDaysUntil = (value: string) => {
   return `In ${days} days`;
 };
 
+const HERO_TRANSITION_MS = 300;
+const HERO_CONTENT_REVEAL_DELAY_MS = 75;
+const HERO_BADGE_DELAY_MS = 110;
+const HERO_TITLE_DELAY_MS = 110;
+const HERO_DESCRIPTION_DELAY_MS = 150;
+const HERO_ACTIONS_DELAY_MS = 225;
+
 const Home = () => {
   const [nextBooking, setNextBooking] = useState<Booking | null>(null);
   const [lastUnratedCompletedBooking, setLastUnratedCompletedBooking] = useState<Booking | null>(null);
@@ -118,7 +125,7 @@ const Home = () => {
     const frameId = window.requestAnimationFrame(() => {
       timerId = window.setTimeout(() => {
         setHeroContentVisible(true);
-      }, 50);
+      }, HERO_CONTENT_REVEAL_DELAY_MS);
     });
 
     return () => {
@@ -194,20 +201,35 @@ const Home = () => {
   const finalHeroMarkup = (
     <div className="p-5">
       <div className="mb-3 flex items-center justify-between gap-2">
-        <p className={`text-xs font-semibold uppercase tracking-wide text-cyan-700 transition-all duration-200 ease-out dark:text-cyan-300 ${heroContentVisible ? 'translate-y-0 opacity-100' : 'translate-y-1 opacity-0'}`}>
+        <p
+          className={`text-xs font-semibold uppercase tracking-wide text-cyan-700 transition-all ease-out dark:text-cyan-300 ${heroContentVisible ? 'translate-y-0 opacity-100' : 'translate-y-1 opacity-0'}`}
+          style={{ transitionDuration: `${HERO_TRANSITION_MS}ms` }}
+        >
           {hero.eyebrow}
         </p>
-        <span className={`rounded-full bg-white/80 px-3 py-1 text-xs font-semibold text-cyan-800 transition-all duration-200 ease-out delay-75 dark:bg-slate-900/50 dark:text-cyan-200 ${heroContentVisible ? 'translate-y-0 opacity-100' : 'translate-y-1 opacity-0'}`}>
+        <span
+          className={`rounded-full bg-white/80 px-3 py-1 text-xs font-semibold text-cyan-800 transition-all ease-out dark:bg-slate-900/50 dark:text-cyan-200 ${heroContentVisible ? 'translate-y-0 opacity-100' : 'translate-y-1 opacity-0'}`}
+          style={{ transitionDuration: `${HERO_TRANSITION_MS}ms`, transitionDelay: `${HERO_BADGE_DELAY_MS}ms` }}
+        >
           {hero.badge}
         </span>
       </div>
-      <h1 className={`text-2xl font-semibold text-slate-800 transition-all duration-200 ease-out delay-75 dark:text-slate-100 ${heroContentVisible ? 'translate-y-0 opacity-100' : 'translate-y-1 opacity-0'}`}>
+      <h1
+        className={`text-2xl font-semibold text-slate-800 transition-all ease-out dark:text-slate-100 ${heroContentVisible ? 'translate-y-0 opacity-100' : 'translate-y-1 opacity-0'}`}
+        style={{ transitionDuration: `${HERO_TRANSITION_MS}ms`, transitionDelay: `${HERO_TITLE_DELAY_MS}ms` }}
+      >
         {hero.title}
       </h1>
-      <p className={`mt-2 text-sm text-slate-600 transition-all duration-200 ease-out delay-100 dark:text-slate-300 ${heroContentVisible ? 'translate-y-0 opacity-100' : 'translate-y-1 opacity-0'}`}>
+      <p
+        className={`mt-2 text-sm text-slate-600 transition-all ease-out dark:text-slate-300 ${heroContentVisible ? 'translate-y-0 opacity-100' : 'translate-y-1 opacity-0'}`}
+        style={{ transitionDuration: `${HERO_TRANSITION_MS}ms`, transitionDelay: `${HERO_DESCRIPTION_DELAY_MS}ms` }}
+      >
         {hero.description}
       </p>
-      <div className={`mt-4 flex gap-2 transition-all duration-200 ease-out delay-150 ${heroContentVisible ? 'translate-y-0 opacity-100' : 'translate-y-1 opacity-0'}`}>
+      <div
+        className={`mt-4 flex gap-2 transition-all ease-out ${heroContentVisible ? 'translate-y-0 opacity-100' : 'translate-y-1 opacity-0'}`}
+        style={{ transitionDuration: `${HERO_TRANSITION_MS}ms`, transitionDelay: `${HERO_ACTIONS_DELAY_MS}ms` }}
+      >
         <Link to={hero.primaryTo} className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white">
           {hero.primaryLabel}
         </Link>
@@ -224,18 +246,20 @@ const Home = () => {
         <div className="rounded-3xl bg-white/90 p-6 shadow-[0_20px_50px_rgba(0,0,0,0.08)] backdrop-blur-xl dark:bg-slate-800/95">
           <PageReveal delay={0}>
             <div
-              className="relative mb-6 overflow-hidden rounded-2xl border border-cyan-200 bg-gradient-to-br from-cyan-50 via-sky-50 to-indigo-50 transition-[height,transform] duration-200 ease-out dark:border-cyan-800/60 dark:from-cyan-950/40 dark:via-sky-950/30 dark:to-indigo-950/40"
-              style={{ height: `${heroHeight}px`, transform: heroLoading ? 'scale(0.988)' : 'scale(1)' }}
+              className="relative mb-6 overflow-hidden rounded-2xl border border-cyan-200 bg-gradient-to-br from-cyan-50 via-sky-50 to-indigo-50 transition-[height,transform] ease-out dark:border-cyan-800/60 dark:from-cyan-950/40 dark:via-sky-950/30 dark:to-indigo-950/40"
+              style={{ height: `${heroHeight}px`, transform: heroLoading ? 'scale(0.988)' : 'scale(1)', transitionDuration: `${HERO_TRANSITION_MS}ms` }}
             >
               <div className="relative h-full">
                 <div
-                  className={`pointer-events-none absolute inset-0 transition-all duration-200 ease-out ${heroLoading ? 'translate-y-0 opacity-100' : '-translate-y-1 opacity-0'}`}
+                  className={`pointer-events-none absolute inset-0 transition-all ease-out ${heroLoading ? 'translate-y-0 opacity-100' : '-translate-y-1 opacity-0'}`}
+                  style={{ transitionDuration: `${HERO_TRANSITION_MS}ms` }}
                   aria-hidden={!heroLoading}
                 >
                   {skeletonMarkup}
                 </div>
                 <div
-                  className={`absolute inset-0 transition-all duration-200 ease-out ${heroContentVisible ? 'translate-y-0 opacity-100' : 'translate-y-1 opacity-0'} ${heroLoading ? 'pointer-events-none' : ''}`}
+                  className={`absolute inset-0 transition-all ease-out ${heroContentVisible ? 'translate-y-0 opacity-100' : 'translate-y-1 opacity-0'} ${heroLoading ? 'pointer-events-none' : ''}`}
+                  style={{ transitionDuration: `${HERO_TRANSITION_MS}ms` }}
                   aria-hidden={heroLoading}
                 >
                   {finalHeroMarkup}
