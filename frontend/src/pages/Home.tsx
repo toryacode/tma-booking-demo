@@ -45,19 +45,21 @@ const Home = () => {
             .filter((id): id is number => typeof id === 'number'),
         );
 
-        const unratedCompleted = bookings
-          .filter((booking) => {
-            const status = normalizeStatus(booking.status);
-            return status === 'completed' && !reviewedBookingIds.has(booking.id);
-          })
+        const lastCompletedBooking = bookings
+          .filter((booking) => normalizeStatus(booking.status) === 'completed')
           .sort((a, b) => {
             const aTime = new Date(a.end_time || a.start_time).getTime();
             const bTime = new Date(b.end_time || b.start_time).getTime();
             return bTime - aTime;
           })[0] || null;
 
+        const unratedLastCompleted =
+          lastCompletedBooking && !reviewedBookingIds.has(lastCompletedBooking.id)
+            ? lastCompletedBooking
+            : null;
+
         setNextBooking(upcoming);
-        setLastUnratedCompletedBooking(!upcoming ? unratedCompleted : null);
+        setLastUnratedCompletedBooking(!upcoming ? unratedLastCompleted : null);
       } catch {
         setNextBooking(null);
         setLastUnratedCompletedBooking(null);
