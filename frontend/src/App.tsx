@@ -24,6 +24,14 @@ const getDisplayName = (user: MeResponse | null) => {
 
 const THEME_SWITCH_DURATION_MS = 540;
 
+type ViewTransitionController = {
+  finished: Promise<void>;
+};
+
+type DocumentWithViewTransition = Document & {
+  startViewTransition?: (updateCallback: () => void | Promise<void>) => ViewTransitionController;
+};
+
 function AppRouter() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -183,8 +191,20 @@ function AppRouter() {
   const handleThemeToggle = () => {
     const root = document.documentElement;
     root.classList.add('theme-switching');
+    const nextTheme: 'light' | 'dark' = theme === 'dark' ? 'light' : 'dark';
 
-    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+    const setNextTheme = () => {
+      setTheme(nextTheme);
+    };
+
+    const transitionDoc = document as DocumentWithViewTransition;
+    if (transitionDoc.startViewTransition) {
+      void transitionDoc.startViewTransition(() => {
+        setNextTheme();
+      }).finished;
+    } else {
+      setNextTheme();
+    }
 
     if (themeSwitchTimerRef.current !== null) {
       window.clearTimeout(themeSwitchTimerRef.current);
