@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { getMyBookings, getMyReviews } from '../api/bookings';
 
 interface Booking {
@@ -47,6 +47,9 @@ const Home = () => {
   const [completedCount, setCompletedCount] = useState(0);
   const [heroLoading, setHeroLoading] = useState(true);
   const [heroContentVisible, setHeroContentVisible] = useState(false);
+  const [heroHeight, setHeroHeight] = useState(176);
+  const skeletonMeasureRef = useRef<HTMLDivElement | null>(null);
+  const contentMeasureRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const loadUpcomingBooking = async () => {
@@ -158,40 +161,74 @@ const Home = () => {
     };
   })();
 
+  useLayoutEffect(() => {
+    const nextHeight = heroLoading
+      ? skeletonMeasureRef.current?.offsetHeight
+      : contentMeasureRef.current?.offsetHeight;
+
+    if (nextHeight) {
+      setHeroHeight(nextHeight);
+    }
+  }, [heroLoading, hero.eyebrow, hero.title, hero.description, hero.primaryLabel, hero.secondaryLabel, hero.badge]);
+
+  const skeletonMarkup = (
+    <div className="p-5">
+      <p className="text-xs font-semibold uppercase tracking-wide text-cyan-700 dark:text-cyan-300">Preparing your dashboard</p>
+      <div className="mt-3 h-6 w-4/5 animate-pulse rounded bg-cyan-100/80 dark:bg-cyan-900/40" />
+      <div className="mt-2 h-4 w-full animate-pulse rounded bg-slate-200/80 dark:bg-slate-700/60" />
+      <div className="mt-2 h-4 w-3/4 animate-pulse rounded bg-slate-200/80 dark:bg-slate-700/60" />
+      <div className="mt-4 flex gap-2">
+        <div className="h-9 w-32 animate-pulse rounded-xl bg-slate-300/80 dark:bg-slate-700/70" />
+        <div className="h-9 w-28 animate-pulse rounded-xl bg-slate-200/80 dark:bg-slate-800/70" />
+      </div>
+    </div>
+  );
+
+  const finalHeroMarkup = (
+    <div className="p-5">
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <p className="text-xs font-semibold uppercase tracking-wide text-cyan-700 dark:text-cyan-300">{hero.eyebrow}</p>
+        <span className="rounded-full bg-white/80 px-3 py-1 text-xs font-semibold text-cyan-800 dark:bg-slate-900/50 dark:text-cyan-200">{hero.badge}</span>
+      </div>
+      <h1 className="text-2xl font-semibold text-slate-800 dark:text-slate-100">{hero.title}</h1>
+      <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{hero.description}</p>
+      <div className="mt-4 flex gap-2">
+        <Link to={hero.primaryTo} className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white">
+          {hero.primaryLabel}
+        </Link>
+        <Link to={hero.secondaryTo} className="rounded-xl border border-slate-300 bg-white/80 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-white dark:border-slate-600 dark:bg-slate-900/50 dark:text-slate-100 dark:hover:bg-slate-900">
+          {hero.secondaryLabel}
+        </Link>
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-100 via-slate-100 to-white py-8 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950">
       <div className="mx-auto max-w-md px-4">
         <div className="rounded-3xl bg-white/90 p-6 shadow-[0_20px_50px_rgba(0,0,0,0.08)] backdrop-blur-xl dark:bg-slate-800/95">
-          <div className={`mb-6 overflow-hidden rounded-2xl border border-cyan-200 bg-gradient-to-br from-cyan-50 via-sky-50 to-indigo-50 transition-all duration-200 ease-out dark:border-cyan-800/60 dark:from-cyan-950/40 dark:via-sky-950/30 dark:to-indigo-950/40 ${heroLoading ? 'min-h-[168px] p-4 scale-[0.985]' : 'min-h-[196px] p-5 scale-100'}`}>
-            {heroLoading ? (
-              <div className="origin-top">
-              <p className="text-xs font-semibold uppercase tracking-wide text-cyan-700 dark:text-cyan-300">Preparing your dashboard</p>
-              <div className="mt-3 h-6 w-4/5 animate-pulse rounded bg-cyan-100/80 dark:bg-cyan-900/40" />
-              <div className="mt-2 h-4 w-full animate-pulse rounded bg-slate-200/80 dark:bg-slate-700/60" />
-              <div className="mt-2 h-4 w-3/4 animate-pulse rounded bg-slate-200/80 dark:bg-slate-700/60" />
-              <div className="mt-4 flex gap-2">
-                <div className="h-9 w-32 animate-pulse rounded-xl bg-slate-300/80 dark:bg-slate-700/70" />
-                <div className="h-9 w-28 animate-pulse rounded-xl bg-slate-200/80 dark:bg-slate-800/70" />
+          <div
+            className="relative mb-6 overflow-hidden rounded-2xl border border-cyan-200 bg-gradient-to-br from-cyan-50 via-sky-50 to-indigo-50 transition-[height,transform] duration-200 ease-out dark:border-cyan-800/60 dark:from-cyan-950/40 dark:via-sky-950/30 dark:to-indigo-950/40"
+            style={{ height: `${heroHeight}px`, transform: heroLoading ? 'scale(0.988)' : 'scale(1)' }}
+          >
+            <div className="relative h-full">
+              <div
+                className={`pointer-events-none absolute inset-0 transition-all duration-200 ease-out ${heroLoading ? 'translate-y-0 opacity-100' : '-translate-y-1 opacity-0'}`}
+                aria-hidden={!heroLoading}
+              >
+                {skeletonMarkup}
               </div>
+              <div
+                className={`absolute inset-0 transition-all duration-200 ease-out ${heroContentVisible ? 'translate-y-0 opacity-100' : 'translate-y-1 opacity-0'} ${heroLoading ? 'pointer-events-none' : ''}`}
+                aria-hidden={heroLoading}
+              >
+                {finalHeroMarkup}
               </div>
-            ) : (
-              <div className={`transition-all duration-200 ease-out ${heroContentVisible ? 'translate-y-0 opacity-100' : 'translate-y-1 opacity-0'}`}>
-              <div className="mb-3 flex items-center justify-between gap-2">
-                <p className="text-xs font-semibold uppercase tracking-wide text-cyan-700 dark:text-cyan-300">{hero.eyebrow}</p>
-                <span className="rounded-full bg-white/80 px-3 py-1 text-xs font-semibold text-cyan-800 dark:bg-slate-900/50 dark:text-cyan-200">{hero.badge}</span>
-              </div>
-              <h1 className="text-2xl font-semibold text-slate-800 dark:text-slate-100">{hero.title}</h1>
-              <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{hero.description}</p>
-              <div className="mt-4 flex gap-2">
-                <Link to={hero.primaryTo} className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white">
-                  {hero.primaryLabel}
-                </Link>
-                <Link to={hero.secondaryTo} className="rounded-xl border border-slate-300 bg-white/80 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-white dark:border-slate-600 dark:bg-slate-900/50 dark:text-slate-100 dark:hover:bg-slate-900">
-                  {hero.secondaryLabel}
-                </Link>
-              </div>
-              </div>
-            )}
+            </div>
+            <div className="pointer-events-none absolute -left-[9999px] top-0 w-full opacity-0" aria-hidden="true">
+              <div ref={skeletonMeasureRef}>{skeletonMarkup}</div>
+              <div ref={contentMeasureRef}>{finalHeroMarkup}</div>
+            </div>
           </div>
 
           {!nextBooking && lastUnratedCompletedBooking && (
