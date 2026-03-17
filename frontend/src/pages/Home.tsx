@@ -46,6 +46,7 @@ const Home = () => {
   const [lastCompletedBooking, setLastCompletedBooking] = useState<Booking | null>(null);
   const [completedCount, setCompletedCount] = useState(0);
   const [heroLoading, setHeroLoading] = useState(true);
+  const [heroContentVisible, setHeroContentVisible] = useState(false);
 
   useEffect(() => {
     const loadUpcomingBooking = async () => {
@@ -103,6 +104,21 @@ const Home = () => {
     void loadUpcomingBooking();
   }, []);
 
+  useEffect(() => {
+    if (heroLoading) {
+      setHeroContentVisible(false);
+      return;
+    }
+
+    const frameId = window.requestAnimationFrame(() => {
+      setHeroContentVisible(true);
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+    };
+  }, [heroLoading]);
+
   const hero = (() => {
     if (nextBooking) {
       return {
@@ -146,8 +162,9 @@ const Home = () => {
     <div className="min-h-screen bg-gradient-to-b from-sky-100 via-slate-100 to-white py-8 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950">
       <div className="mx-auto max-w-md px-4">
         <div className="rounded-3xl bg-white/90 p-6 shadow-[0_20px_50px_rgba(0,0,0,0.08)] backdrop-blur-xl dark:bg-slate-800/95">
-          {heroLoading ? (
-            <div className="mb-6 rounded-2xl border border-cyan-200 bg-gradient-to-br from-cyan-50 via-sky-50 to-indigo-50 p-4 dark:border-cyan-800/60 dark:from-cyan-950/40 dark:via-sky-950/30 dark:to-indigo-950/40">
+          <div className={`mb-6 overflow-hidden rounded-2xl border border-cyan-200 bg-gradient-to-br from-cyan-50 via-sky-50 to-indigo-50 transition-all duration-200 ease-out dark:border-cyan-800/60 dark:from-cyan-950/40 dark:via-sky-950/30 dark:to-indigo-950/40 ${heroLoading ? 'min-h-[168px] p-4 scale-[0.985]' : 'min-h-[196px] p-5 scale-100'}`}>
+            {heroLoading ? (
+              <div className="origin-top">
               <p className="text-xs font-semibold uppercase tracking-wide text-cyan-700 dark:text-cyan-300">Preparing your dashboard</p>
               <div className="mt-3 h-6 w-4/5 animate-pulse rounded bg-cyan-100/80 dark:bg-cyan-900/40" />
               <div className="mt-2 h-4 w-full animate-pulse rounded bg-slate-200/80 dark:bg-slate-700/60" />
@@ -156,9 +173,9 @@ const Home = () => {
                 <div className="h-9 w-32 animate-pulse rounded-xl bg-slate-300/80 dark:bg-slate-700/70" />
                 <div className="h-9 w-28 animate-pulse rounded-xl bg-slate-200/80 dark:bg-slate-800/70" />
               </div>
-            </div>
-          ) : (
-            <div className="mb-6 rounded-2xl border border-cyan-200 bg-gradient-to-br from-cyan-50 via-sky-50 to-indigo-50 p-4 dark:border-cyan-800/60 dark:from-cyan-950/40 dark:via-sky-950/30 dark:to-indigo-950/40">
+              </div>
+            ) : (
+              <div className={`transition-all duration-200 ease-out ${heroContentVisible ? 'translate-y-0 opacity-100' : 'translate-y-1 opacity-0'}`}>
               <div className="mb-3 flex items-center justify-between gap-2">
                 <p className="text-xs font-semibold uppercase tracking-wide text-cyan-700 dark:text-cyan-300">{hero.eyebrow}</p>
                 <span className="rounded-full bg-white/80 px-3 py-1 text-xs font-semibold text-cyan-800 dark:bg-slate-900/50 dark:text-cyan-200">{hero.badge}</span>
@@ -173,8 +190,9 @@ const Home = () => {
                   {hero.secondaryLabel}
                 </Link>
               </div>
-            </div>
-          )}
+              </div>
+            )}
+          </div>
 
           {!nextBooking && lastUnratedCompletedBooking && (
             <Link
