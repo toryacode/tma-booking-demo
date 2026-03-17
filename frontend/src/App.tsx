@@ -26,6 +26,8 @@ function AppRouter() {
   const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState<MeResponse | null>(null);
   const [authBootstrapping, setAuthBootstrapping] = useState(true);
+  const [showAuthOverlay, setShowAuthOverlay] = useState(true);
+  const [authOverlayFading, setAuthOverlayFading] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const stored = localStorage.getItem('tma_theme');
     if (stored === 'light' || stored === 'dark') {
@@ -165,20 +167,25 @@ function AppRouter() {
     setNavAvatarError(false);
   }, [normalizedAvatarSrc]);
 
-  if (authBootstrapping) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-slate-100 to-white dark:from-slate-950 dark:to-slate-900">
-        <div className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center px-6 text-center">
-          <div className="h-12 w-12 animate-spin rounded-full border-4 border-slate-300 border-t-blue-600 dark:border-slate-700 dark:border-t-blue-400" />
-          <h1 className="mt-6 text-xl font-semibold text-slate-800 dark:text-slate-100">Loading your salon space</h1>
-          <p className="mt-2 text-sm text-slate-500 dark:text-slate-300">Authorizing account and preparing your bookings...</p>
-        </div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (authBootstrapping) {
+      return;
+    }
+
+    setAuthOverlayFading(true);
+    const timer = window.setTimeout(() => {
+      setShowAuthOverlay(false);
+    }, 150);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [authBootstrapping]);
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900 transition-colors dark:bg-slate-950 dark:text-slate-100">
+      {!authBootstrapping && (
+      <>
       <nav className="sticky top-0 z-20 border-b border-slate-200/70 bg-white/90 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/85">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-3">
           <div className="rounded-2xl bg-slate-100 p-1.5 flex items-center gap-1.5 dark:bg-slate-800/80">
@@ -252,6 +259,22 @@ function AppRouter() {
         <Route path="/profile" element={<Profile user={currentUser} />} />
       </Routes>
       </main>
+      </>
+      )}
+
+      {showAuthOverlay && (
+        <div
+          className={`fixed inset-0 z-50 bg-gradient-to-b from-slate-100 to-white transition-opacity duration-300 dark:from-slate-950 dark:to-slate-900 ${authOverlayFading ? 'pointer-events-none opacity-0' : 'opacity-100'}`}
+          aria-live="polite"
+          aria-busy="true"
+        >
+          <div className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center px-6 text-center">
+            <div className="h-12 w-12 animate-spin rounded-full border-4 border-slate-300 border-t-blue-600 dark:border-slate-700 dark:border-t-blue-400" />
+            <h1 className="mt-6 text-xl font-semibold text-slate-800 dark:text-slate-100">Loading your salon space</h1>
+            <p className="mt-2 text-sm text-slate-500 dark:text-slate-300">Authorizing account and preparing your bookings...</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

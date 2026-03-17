@@ -18,9 +18,30 @@ interface UserReview {
 
 const normalizeStatus = (status: string) => status.trim().toLowerCase().replace(' ', '_');
 
+const formatBookingDateTime = (value: string) =>
+  new Date(value).toLocaleString([], {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+
+const getDaysUntil = (value: string) => {
+  const now = Date.now();
+  const target = new Date(value).getTime();
+  const diff = target - now;
+  const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+  if (days <= 0) return 'Today';
+  if (days === 1) return 'Tomorrow';
+  return `In ${days} days`;
+};
+
 const Home = () => {
   const [nextBooking, setNextBooking] = useState<Booking | null>(null);
   const [lastUnratedCompletedBooking, setLastUnratedCompletedBooking] = useState<Booking | null>(null);
+  const [lastCompletedBooking, setLastCompletedBooking] = useState<Booking | null>(null);
+  const [completedCount, setCompletedCount] = useState(0);
 
   useEffect(() => {
     const loadUpcomingBooking = async () => {
@@ -53,6 +74,8 @@ const Home = () => {
             return bTime - aTime;
           })[0] || null;
 
+        const totalCompletedCount = bookings.filter((booking) => normalizeStatus(booking.status) === 'completed').length;
+
         const unratedLastCompleted =
           lastCompletedBooking && !reviewedBookingIds.has(lastCompletedBooking.id)
             ? lastCompletedBooking
@@ -60,21 +83,78 @@ const Home = () => {
 
         setNextBooking(upcoming);
         setLastUnratedCompletedBooking(!upcoming ? unratedLastCompleted : null);
+        setLastCompletedBooking(lastCompletedBooking);
+        setCompletedCount(totalCompletedCount);
       } catch {
         setNextBooking(null);
         setLastUnratedCompletedBooking(null);
+        setLastCompletedBooking(null);
+        setCompletedCount(0);
       }
     };
 
     void loadUpcomingBooking();
   }, []);
 
+  const hero = (() => {
+    if (nextBooking) {
+      return {
+        eyebrow: 'Next Appointment',
+        title: `${nextBooking.service?.name || 'Service'} with ${nextBooking.employee?.name || 'your specialist'}`,
+        description: `Booked for ${formatBookingDateTime(nextBooking.start_time)}. We will notify you right before it starts.`,
+        primaryTo: `/bookings/${nextBooking.id}`,
+        primaryLabel: 'Open Booking',
+        secondaryTo: '/services',
+        secondaryLabel: 'Add Another Service',
+        badge: getDaysUntil(nextBooking.start_time),
+      };
+    }
+
+    if (lastCompletedBooking) {
+      return {
+        eyebrow: 'Stay In Rhythm',
+        title: 'Ready for your next refresh?',
+        description: `Your last visit was ${formatBookingDateTime(lastCompletedBooking.end_time || lastCompletedBooking.start_time)}${lastCompletedBooking.service?.name ? ` for ${lastCompletedBooking.service.name}` : ''}. Keep the momentum going.`,
+        primaryTo: '/services',
+        primaryLabel: 'Book Next Visit',
+        secondaryTo: '/history',
+        secondaryLabel: 'See Visit History',
+        badge: `${completedCount} completed visit${completedCount === 1 ? '' : 's'}`,
+      };
+    }
+
+    return {
+      eyebrow: 'Welcome',
+      title: 'Your beauty concierge is ready',
+      description: 'Pick a service, choose your specialist, and book in under a minute.',
+      primaryTo: '/services',
+      primaryLabel: 'Find Services',
+      secondaryTo: '/history',
+      secondaryLabel: 'My Bookings',
+      badge: 'Fast booking flow',
+    };
+  })();
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-100 via-slate-100 to-white py-8 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950">
       <div className="mx-auto max-w-md px-4">
         <div className="rounded-3xl bg-white/90 p-6 shadow-[0_20px_50px_rgba(0,0,0,0.08)] backdrop-blur-xl dark:bg-slate-800/95">
-          <h1 className="text-3xl font-semibold text-slate-800 mb-3 dark:text-slate-100">Beauty Salon Booking</h1>
-          <p className="text-slate-500 mb-6 dark:text-slate-300">Fast and beautiful appointment experience for your clients.</p>
+          <div className="mb-6 rounded-2xl border border-cyan-200 bg-gradient-to-br from-cyan-50 via-sky-50 to-indigo-50 p-4 dark:border-cyan-800/60 dark:from-cyan-950/40 dark:via-sky-950/30 dark:to-indigo-950/40">
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-cyan-700 dark:text-cyan-300">{hero.eyebrow}</p>
+              <span className="rounded-full bg-white/80 px-3 py-1 text-xs font-semibold text-cyan-800 dark:bg-slate-900/50 dark:text-cyan-200">{hero.badge}</span>
+            </div>
+            <h1 className="text-2xl font-semibold text-slate-800 dark:text-slate-100">{hero.title}</h1>
+            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{hero.description}</p>
+            <div className="mt-4 flex gap-2">
+              <Link to={hero.primaryTo} className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white">
+                {hero.primaryLabel}
+              </Link>
+              <Link to={hero.secondaryTo} className="rounded-xl border border-slate-300 bg-white/80 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-white dark:border-slate-600 dark:bg-slate-900/50 dark:text-slate-100 dark:hover:bg-slate-900">
+                {hero.secondaryLabel}
+              </Link>
+            </div>
+          </div>
 
           {nextBooking && (
             <Link
