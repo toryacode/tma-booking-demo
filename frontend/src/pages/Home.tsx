@@ -50,8 +50,8 @@ const HERO_ACTIONS_DELAY_MS = 225;
 
 const Home = () => {
   const [nextBooking, setNextBooking] = useState<Booking | null>(null);
-  const [lastUnratedCompletedBooking, setLastUnratedCompletedBooking] = useState<Booking | null>(null);
   const [lastCompletedBooking, setLastCompletedBooking] = useState<Booking | null>(null);
+  const [lastCompletedNeedsReview, setLastCompletedNeedsReview] = useState(false);
   const [completedCount, setCompletedCount] = useState(0);
   const [heroLoading, setHeroLoading] = useState(true);
   const [heroContentVisible, setHeroContentVisible] = useState(false);
@@ -93,19 +93,16 @@ const Home = () => {
 
         const totalCompletedCount = bookings.filter((booking) => normalizeStatus(booking.status) === 'completed').length;
 
-        const unratedLastCompleted =
-          lastCompletedBooking && !reviewedBookingIds.has(lastCompletedBooking.id)
-            ? lastCompletedBooking
-            : null;
+        const shouldRateLastCompleted = !!(lastCompletedBooking && !reviewedBookingIds.has(lastCompletedBooking.id));
 
         setNextBooking(upcoming);
-        setLastUnratedCompletedBooking(!upcoming ? unratedLastCompleted : null);
         setLastCompletedBooking(lastCompletedBooking);
+        setLastCompletedNeedsReview(!upcoming && shouldRateLastCompleted);
         setCompletedCount(totalCompletedCount);
       } catch {
         setNextBooking(null);
-        setLastUnratedCompletedBooking(null);
         setLastCompletedBooking(null);
+        setLastCompletedNeedsReview(false);
         setCompletedCount(0);
       } finally {
         setHeroLoading(false);
@@ -147,6 +144,19 @@ const Home = () => {
         secondaryTo: '/services',
         secondaryLabel: 'Add Another Service',
         badge: getDaysUntil(nextBooking.start_time),
+      };
+    }
+
+    if (lastCompletedBooking && lastCompletedNeedsReview) {
+      return {
+        eyebrow: 'Share Your Feedback',
+        title: 'Rate your last visit',
+        description: `Tell us how ${lastCompletedBooking.service?.name || 'your service'} with ${lastCompletedBooking.employee?.name || 'your specialist'} went. Your feedback helps us improve every appointment.`,
+        primaryTo: `/bookings/${lastCompletedBooking.id}`,
+        primaryLabel: 'Leave Rating',
+        secondaryTo: '/history',
+        secondaryLabel: 'Open Booking History',
+        badge: 'Unrated visit',
       };
     }
 
@@ -271,26 +281,6 @@ const Home = () => {
               </div>
             </div>
           </PageReveal>
-
-          {!nextBooking && lastUnratedCompletedBooking && (
-            <PageReveal delay={90}>
-              <Link
-                to={`/bookings/${lastUnratedCompletedBooking.id}`}
-                state={{ booking: lastUnratedCompletedBooking }}
-                className="mb-6 block rounded-2xl border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 p-4 transition hover:-translate-y-0.5 hover:shadow-md dark:border-amber-800/70 dark:from-amber-950/40 dark:to-orange-950/40"
-              >
-                <p className="text-xs font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-300">Rate Your Last Visit</p>
-                <p className="mt-2 text-sm font-semibold text-slate-800 dark:text-slate-100">
-                  Tell us about {lastUnratedCompletedBooking.service?.name || 'your service'} with {lastUnratedCompletedBooking.employee?.name || 'your specialist'}
-                </p>
-                <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Your feedback helps us improve your next appointment.</p>
-                <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1 text-xs font-semibold text-amber-800 dark:bg-slate-900/50 dark:text-amber-200">
-                  <span className="text-sm leading-none">★</span>
-                  Open and leave a rating
-                </div>
-              </Link>
-            </PageReveal>
-          )}
 
           <PageReveal delay={160}>
             <div className="space-y-3">
