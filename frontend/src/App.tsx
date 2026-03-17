@@ -25,6 +25,7 @@ function AppRouter() {
   const location = useLocation();
   const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState<MeResponse | null>(null);
+  const [authBootstrapping, setAuthBootstrapping] = useState(true);
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const stored = localStorage.getItem('tma_theme');
     if (stored === 'light' || stored === 'dark') {
@@ -102,24 +103,30 @@ function AppRouter() {
       const MAX_ATTEMPTS = 5;
       const RETRY_DELAY_MS = 1000;
 
-      for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt += 1) {
-        if (cancelled) {
-          return;
+      try {
+        for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt += 1) {
+          if (cancelled) {
+            return;
+          }
+
+          await tryTelegramLogin();
+          const loaded = await tryLoadCurrentUser();
+          if (loaded) {
+            return;
+          }
+
+          if (attempt < MAX_ATTEMPTS - 1) {
+            await wait(RETRY_DELAY_MS);
+          }
         }
 
-        await tryTelegramLogin();
-        const loaded = await tryLoadCurrentUser();
-        if (loaded) {
-          return;
+        if (!cancelled) {
+          setCurrentUser(null);
         }
-
-        if (attempt < MAX_ATTEMPTS - 1) {
-          await wait(RETRY_DELAY_MS);
+      } finally {
+        if (!cancelled) {
+          setAuthBootstrapping(false);
         }
-      }
-
-      if (!cancelled) {
-        setCurrentUser(null);
       }
     };
 
@@ -157,6 +164,18 @@ function AppRouter() {
   useEffect(() => {
     setNavAvatarError(false);
   }, [normalizedAvatarSrc]);
+
+  if (authBootstrapping) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-slate-100 to-white dark:from-slate-950 dark:to-slate-900">
+        <div className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center px-6 text-center">
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-slate-300 border-t-blue-600 dark:border-slate-700 dark:border-t-blue-400" />
+          <h1 className="mt-6 text-xl font-semibold text-slate-800 dark:text-slate-100">Loading your salon space</h1>
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-300">Authorizing account and preparing your bookings...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900 transition-colors dark:bg-slate-950 dark:text-slate-100">

@@ -11,6 +11,8 @@ interface Booking {
   status: string;
 }
 
+const normalizeStatus = (status: string) => status.trim().toLowerCase().replace(' ', '_');
+
 const Home = () => {
   const [nextBooking, setNextBooking] = useState<Booking | null>(null);
 
@@ -20,12 +22,13 @@ const Home = () => {
         const bookings = (await getMyBookings()) as Booking[];
         const now = new Date();
         const upcoming = bookings
-          .filter((booking) => booking.status !== 'cancelled')
-          .sort((a, b) => {
-            const aDelta = Math.abs(new Date(a.start_time).getTime() - now.getTime());
-            const bDelta = Math.abs(new Date(b.start_time).getTime() - now.getTime());
-            return aDelta - bDelta;
-          })[0] || null;
+          .filter((booking) => {
+            const status = normalizeStatus(booking.status);
+            const start = new Date(booking.start_time).getTime();
+            const isFuture = start > now.getTime();
+            return isFuture && (status === 'scheduled' || status === 'upcoming' || status === 'upcomming');
+          })
+          .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())[0] || null;
 
         setNextBooking(upcoming);
       } catch {
