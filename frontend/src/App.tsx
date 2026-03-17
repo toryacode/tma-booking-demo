@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
+import { useRef } from 'react';
 import { useState } from 'react';
 import Home from './pages/Home';
 import Services from './pages/Services';
@@ -21,6 +22,8 @@ const getDisplayName = (user: MeResponse | null) => {
   return `User ${user.telegram_user_id}`;
 };
 
+const THEME_SWITCH_DURATION_MS = 540;
+
 function AppRouter() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -35,11 +38,21 @@ function AppRouter() {
     }
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   });
+  const themeSwitchTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark');
     localStorage.setItem('tma_theme', theme);
   }, [theme]);
+
+  useEffect(() => {
+    return () => {
+      if (themeSwitchTimerRef.current !== null) {
+        window.clearTimeout(themeSwitchTimerRef.current);
+      }
+      document.documentElement.classList.remove('theme-switching');
+    };
+  }, []);
 
   useEffect(() => {
     const webApp = window.Telegram?.WebApp;
@@ -167,6 +180,22 @@ function AppRouter() {
     setNavAvatarError(false);
   }, [normalizedAvatarSrc]);
 
+  const handleThemeToggle = () => {
+    const root = document.documentElement;
+    root.classList.add('theme-switching');
+
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+
+    if (themeSwitchTimerRef.current !== null) {
+      window.clearTimeout(themeSwitchTimerRef.current);
+    }
+
+    themeSwitchTimerRef.current = window.setTimeout(() => {
+      root.classList.remove('theme-switching');
+      themeSwitchTimerRef.current = null;
+    }, THEME_SWITCH_DURATION_MS + 40);
+  };
+
   useEffect(() => {
     if (authBootstrapping) {
       return;
@@ -224,11 +253,36 @@ function AppRouter() {
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              onClick={handleThemeToggle}
               aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
               className="rounded-full border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
             >
-              {theme === 'dark' ? '☀️' : '🌙'}
+              <span className="relative block h-4 w-4" aria-hidden="true">
+                <svg
+                  viewBox="0 0 24 24"
+                  className={`absolute inset-0 h-4 w-4 transform-gpu transition-all duration-500 ease-out ${theme === 'dark' ? 'rotate-0 scale-100 opacity-100' : '-rotate-45 scale-75 opacity-0'}`}
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <circle cx="12" cy="12" r="4" />
+                  <path d="M12 2v2.2M12 19.8V22M4.9 4.9l1.5 1.5M17.6 17.6l1.5 1.5M2 12h2.2M19.8 12H22M4.9 19.1l1.5-1.5M17.6 6.4l1.5-1.5" />
+                </svg>
+
+                <svg
+                  viewBox="0 0 24 24"
+                  className={`absolute inset-0 h-4 w-4 transform-gpu transition-all duration-500 ease-out ${theme === 'dark' ? 'rotate-45 scale-75 opacity-0' : 'rotate-0 scale-100 opacity-100'}`}
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M20.5 14.6A8.5 8.5 0 1 1 9.4 3.5 7 7 0 0 0 20.5 14.6Z" />
+                </svg>
+              </span>
             </button>
 
             <NavLink to="/profile" className="flex items-center gap-2 rounded-full border border-slate-200 px-2 py-1 hover:bg-slate-50 transition dark:border-slate-700 dark:hover:bg-slate-800" aria-label="Open profile">
