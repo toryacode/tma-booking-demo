@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import type { MeResponse } from '../api/auth';
 import { getMyReviews } from '../api/bookings';
@@ -35,6 +35,8 @@ const getInitial = (user: MeResponse | null) => {
   return name.charAt(0).toUpperCase() || 'U';
 };
 
+const REVIEWS_PANEL_DURATION_MS = 330;
+
 const Profile = ({ user }: ProfileProps) => {
   const navigate = useNavigate();
   const displayName = getDisplayName(user);
@@ -44,6 +46,9 @@ const Profile = ({ user }: ProfileProps) => {
   const [reviews, setReviews] = useState<ReviewListItem[]>([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
   const [reviewsError, setReviewsError] = useState('');
+  const [reviewsContentVisible, setReviewsContentVisible] = useState(false);
+  const [reviewsPanelHeight, setReviewsPanelHeight] = useState(0);
+  const reviewsContentRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     setAvatarError(false);
@@ -65,6 +70,32 @@ const Profile = ({ user }: ProfileProps) => {
       })
       .finally(() => setReviewsLoading(false));
   }, [user]);
+
+  useLayoutEffect(() => {
+    const nextHeight = reviewsOpen ? (reviewsContentRef.current?.offsetHeight ?? 0) : 0;
+    setReviewsPanelHeight(nextHeight);
+  }, [reviewsOpen, reviews, reviewsLoading, reviewsError]);
+
+  useEffect(() => {
+    if (!reviewsOpen) {
+      setReviewsContentVisible(false);
+      return;
+    }
+
+    let timerId: number | null = null;
+    const frameId = window.requestAnimationFrame(() => {
+      timerId = window.setTimeout(() => {
+        setReviewsContentVisible(true);
+      }, 70);
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+      if (timerId !== null) {
+        window.clearTimeout(timerId);
+      }
+    };
+  }, [reviewsOpen]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white py-8 dark:from-slate-900 dark:to-slate-950">
@@ -124,27 +155,45 @@ const Profile = ({ user }: ProfileProps) => {
               </span>
             </button>
 
-            {reviewsOpen && (
-              <div className="mt-4 space-y-3">
+            <div
+              className="overflow-hidden transition-[height,opacity,margin] ease-out"
+              style={{
+                height: `${reviewsPanelHeight}px`,
+                opacity: reviewsOpen ? 1 : 0,
+                marginTop: reviewsOpen ? '16px' : '0px',
+                transitionDuration: `${REVIEWS_PANEL_DURATION_MS}ms`,
+              }}
+              aria-hidden={!reviewsOpen}
+            >
+              <div ref={reviewsContentRef} className="space-y-3">
                 {reviewsLoading && (
-                  <p className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-500 dark:bg-slate-700/50 dark:text-slate-300">
+                  <p
+                    className={`rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-500 transition-all ease-out dark:bg-slate-700/50 dark:text-slate-300 ${reviewsContentVisible ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'}`}
+                    style={{ transitionDuration: `${REVIEWS_PANEL_DURATION_MS}ms`, transitionDelay: '60ms' }}
+                  >
                     Loading reviews...
                   </p>
                 )}
 
                 {reviewsError && (
-                  <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:bg-rose-900/30 dark:text-rose-200">
+                  <p
+                    className={`rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700 transition-all ease-out dark:bg-rose-900/30 dark:text-rose-200 ${reviewsContentVisible ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'}`}
+                    style={{ transitionDuration: `${REVIEWS_PANEL_DURATION_MS}ms`, transitionDelay: '60ms' }}
+                  >
                     {reviewsError}
                   </p>
                 )}
 
                 {!reviewsLoading && !reviewsError && reviews.length === 0 && (
-                  <p className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-500 dark:bg-slate-700/50 dark:text-slate-300">
+                  <p
+                    className={`rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-500 transition-all ease-out dark:bg-slate-700/50 dark:text-slate-300 ${reviewsContentVisible ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'}`}
+                    style={{ transitionDuration: `${REVIEWS_PANEL_DURATION_MS}ms`, transitionDelay: '60ms' }}
+                  >
                     No reviews yet.
                   </p>
                 )}
 
-                {!reviewsLoading && !reviewsError && reviews.map((item) => {
+                {!reviewsLoading && !reviewsError && reviews.map((item, index) => {
                   const visitDate = new Date(item.booking.start_time);
                   const postedDate = new Date(item.review_date);
 
@@ -152,7 +201,13 @@ const Profile = ({ user }: ProfileProps) => {
                     <Link
                       key={item.id}
                       to={`/bookings/${item.booking.id}`}
-                      className="block rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:-translate-y-0.5 hover:shadow-md dark:border-slate-700 dark:bg-slate-900/50"
+                      className={`block rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:-translate-y-0.5 hover:shadow-md dark:border-slate-700 dark:bg-slate-900/50 ${reviewsContentVisible ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'}`}
+                      style={{
+                        transitionProperty: 'opacity, transform, box-shadow',
+                        transitionDuration: `${REVIEWS_PANEL_DURATION_MS}ms`,
+                        transitionTimingFunction: 'cubic-bezier(0.22, 1, 0.36, 1)',
+                        transitionDelay: `${80 + Math.min(index, 6) * 70}ms`,
+                      }}
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div>
@@ -181,7 +236,7 @@ const Profile = ({ user }: ProfileProps) => {
                   );
                 })}
               </div>
-            )}
+            </div>
           </div>
         </PageReveal>
       </div>
