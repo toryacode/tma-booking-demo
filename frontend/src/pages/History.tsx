@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { getMyBookings } from '../api/bookings';
 import BookingStatusChip from '../components/booking/BookingStatusChip';
+import PageReveal from '../components/ui/PageReveal';
 
 interface Booking {
   id: number;
@@ -85,71 +86,85 @@ const History = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white py-8 dark:from-slate-900 dark:to-slate-950">
       <div className="mx-auto max-w-3xl px-4">
-        <div className="mb-5">
-          <h1 className="mb-3 text-3xl font-bold text-slate-800 dark:text-slate-100">My Bookings</h1>
-          <button onClick={() => navigate('/')} className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700">
-            ← Back
-          </button>
-        </div>
+        <PageReveal delay={0}>
+          <div className="mb-5">
+            <h1 className="mb-3 text-3xl font-bold text-slate-800 dark:text-slate-100">My Bookings</h1>
+            <button onClick={() => navigate('/')} className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700">
+              ← Back
+            </button>
+          </div>
+        </PageReveal>
 
-        {loading && <p className="rounded-3xl bg-white/80 p-6 text-center text-slate-500 shadow-lg dark:bg-slate-800/80 dark:text-slate-300">Loading bookings...</p>}
-        {error && <p className="rounded-3xl bg-rose-50 p-6 text-center text-rose-700 shadow-lg dark:bg-rose-900/30 dark:text-rose-200">{error}</p>}
+        {loading && (
+          <PageReveal delay={90}>
+            <p className="rounded-3xl bg-white/80 p-6 text-center text-slate-500 shadow-lg dark:bg-slate-800/80 dark:text-slate-300">Loading bookings...</p>
+          </PageReveal>
+        )}
+        {error && (
+          <PageReveal delay={90}>
+            <p className="rounded-3xl bg-rose-50 p-6 text-center text-rose-700 shadow-lg dark:bg-rose-900/30 dark:text-rose-200">{error}</p>
+          </PageReveal>
+        )}
 
         {!loading && !error && bookings.length === 0 && (
-          <div className="rounded-3xl bg-white/90 p-6 text-center text-slate-600 shadow-lg dark:bg-slate-800 dark:text-slate-300">No bookings yet. Book your first service today!</div>
+          <PageReveal delay={90}>
+            <div className="rounded-3xl bg-white/90 p-6 text-center text-slate-600 shadow-lg dark:bg-slate-800 dark:text-slate-300">No bookings yet. Book your first service today!</div>
+          </PageReveal>
         )}
 
         {!loading && !error && bookings.length > 0 && (
           <div className="space-y-4">
-            {sections.map(section => (
-              <div key={section.key} className="rounded-3xl border border-slate-200 bg-white/95 p-4 shadow-lg dark:border-slate-700 dark:bg-slate-800/95">
-                <button
-                  type="button"
-                  onClick={() => toggleSection(section.key)}
-                  className="flex w-full items-center justify-between rounded-2xl px-2 py-1 text-left"
-                >
-                  <div>
-                    <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">{section.title}</h2>
-                    <p className="text-sm text-slate-500 dark:text-slate-300">{section.bookings.length} booking{section.bookings.length === 1 ? '' : 's'}</p>
-                  </div>
-                  <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-600 transition hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600">
-                    <svg
-                      className={`h-4 w-4 transition-transform ${openSections[section.key] ? 'rotate-180' : 'rotate-0'}`}
-                      viewBox="0 0 20 20"
-                      fill="none"
-                      aria-hidden="true"
-                    >
-                      <path d="M5 8L10 13L15 8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </span>
-                </button>
-
-                {openSections[section.key] && (
-                  <div className="mt-3 space-y-3">
-                    {section.bookings.length === 0 && (
-                      <p className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500 dark:border-slate-600 dark:bg-slate-700/40 dark:text-slate-300">
-                        No bookings in this section.
-                      </p>
-                    )}
-
-                    {section.bookings.map(booking => (
-                      <Link
-                        key={booking.id}
-                        to={`/bookings/${booking.id}`}
-                        state={{ booking }}
-                        className="block rounded-3xl bg-slate-50 p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:bg-slate-700/60"
+            {sections.map((section, index) => (
+              <PageReveal key={section.key} delay={90 + index * 70}>
+                <div className="rounded-3xl border border-slate-200 bg-white/95 p-4 shadow-lg dark:border-slate-700 dark:bg-slate-800/95">
+                  <button
+                    type="button"
+                    onClick={() => toggleSection(section.key)}
+                    className="flex w-full items-center justify-between rounded-2xl px-2 py-1 text-left"
+                  >
+                    <div>
+                      <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">{section.title}</h2>
+                      <p className="text-sm text-slate-500 dark:text-slate-300">{section.bookings.length} booking{section.bookings.length === 1 ? '' : 's'}</p>
+                    </div>
+                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-600 transition hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600">
+                      <svg
+                        className={`h-4 w-4 transition-transform ${openSections[section.key] ? 'rotate-180' : 'rotate-0'}`}
+                        viewBox="0 0 20 20"
+                        fill="none"
+                        aria-hidden="true"
                       >
-                        <h3 className="text-xl font-semibold text-slate-800 dark:text-slate-100">{booking.service?.name || 'Unknown Service'}</h3>
-                        <p className="text-slate-500 dark:text-slate-300">with {booking.employee?.name || 'Unknown Specialist'}</p>
-                        <p className="mt-1 text-slate-500 dark:text-slate-300">{new Date(booking.start_time).toLocaleString()}</p>
-                        <div className="mt-3">
-                          <BookingStatusChip status={booking.status} />
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
+                        <path d="M5 8L10 13L15 8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </span>
+                  </button>
+
+                  {openSections[section.key] && (
+                    <div className="mt-3 space-y-3">
+                      {section.bookings.length === 0 && (
+                        <p className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500 dark:border-slate-600 dark:bg-slate-700/40 dark:text-slate-300">
+                          No bookings in this section.
+                        </p>
+                      )}
+
+                      {section.bookings.map(booking => (
+                        <Link
+                          key={booking.id}
+                          to={`/bookings/${booking.id}`}
+                          state={{ booking }}
+                          className="block rounded-3xl bg-slate-50 p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:bg-slate-700/60"
+                        >
+                          <h3 className="text-xl font-semibold text-slate-800 dark:text-slate-100">{booking.service?.name || 'Unknown Service'}</h3>
+                          <p className="text-slate-500 dark:text-slate-300">with {booking.employee?.name || 'Unknown Specialist'}</p>
+                          <p className="mt-1 text-slate-500 dark:text-slate-300">{new Date(booking.start_time).toLocaleString()}</p>
+                          <div className="mt-3">
+                            <BookingStatusChip status={booking.status} />
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </PageReveal>
             ))}
           </div>
         )}
