@@ -28,10 +28,13 @@ const formatBookingDateTime = (value: string) =>
   });
 
 const getDaysUntil = (value: string) => {
-  const now = Date.now();
-  const target = new Date(value).getTime();
-  const diff = target - now;
-  const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+  const now = new Date();
+  const target = new Date(value);
+
+  const nowDayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const targetDayStart = new Date(target.getFullYear(), target.getMonth(), target.getDate()).getTime();
+  const days = Math.round((targetDayStart - nowDayStart) / (1000 * 60 * 60 * 24));
+
   if (days <= 0) return 'Today';
   if (days === 1) return 'Tomorrow';
   return `In ${days} days`;
@@ -155,20 +158,6 @@ const Home = () => {
               </Link>
             </div>
           </div>
-
-          {nextBooking && (
-            <Link
-              to={`/bookings/${nextBooking.id}`}
-              state={{ booking: nextBooking }}
-              className="mb-6 block rounded-2xl border border-blue-200 bg-blue-50 p-4 transition hover:-translate-y-0.5 hover:shadow-md dark:border-blue-800 dark:bg-blue-950/40"
-            >
-              <p className="text-xs font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-300">Closest Booking</p>
-              <p className="mt-2 text-sm font-semibold text-slate-800 dark:text-slate-100">
-                {nextBooking.service?.name || 'Service'} with {nextBooking.employee?.name || 'Specialist'}
-              </p>
-              <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{new Date(nextBooking.start_time).toLocaleString()}</p>
-            </Link>
-          )}
 
           {!nextBooking && lastUnratedCompletedBooking && (
             <Link
