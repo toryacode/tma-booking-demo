@@ -18,24 +18,35 @@ def _round_price(value: float) -> float:
 
 
 def get_user_loyalty_status(db: Session, user_id: str):
-    completed_regular_bookings = db.query(func.count(Booking.id)).filter(
-        Booking.user_id == user_id,
-        Booking.status == "completed",
-        Booking.is_loyalty_discount.is_(False),
-    ).scalar() or 0
+    bookings = db.query(Booking).filter(Booking.user_id == user_id).order_by(Booking.created_at.asc(), Booking.id.asc()).all()
 
-    loyalty_discounts_issued = db.query(func.count(Booking.id)).filter(
-        Booking.user_id == user_id,
-        Booking.is_loyalty_discount.is_(True),
-        Booking.status.notin_(["cancelled", "canceled"]),
-    ).scalar() or 0
+    cancelled_statuses = {"cancelled", "canceled"}
+    active_statuses = {"scheduled", "upcoming", "upcomming", "in_progress"}
 
-    next_threshold = (loyalty_discounts_issued + 1) * LOYALTY_CYCLE_COMPLETED_BOOKINGS
-    next_booking_discounted = completed_regular_bookings >= next_threshold
-    bookings_until_discount = 0 if next_booking_discounted else (next_threshold - completed_regular_bookings)
+    loyalty_discounts_issued = 0
+    has_active_discounted_booking = False
+    last_non_cancelled_discount_index = -1
+
+    for idx, booking in enumerate(bookings):
+        normalized_status = (booking.status or "").strip().lower()
+        if booking.is_loyalty_discount and normalized_status not in cancelled_statuses:
+            loyalty_discounts_issued += 1
+            last_non_cancelled_discount_index = idx
+            if normalized_status in active_statuses:
+                has_active_discounted_booking = True
+
+    completed_regular_since_last_discount = 0
+    for booking in bookings[last_non_cancelled_discount_index + 1:]:
+        normalized_status = (booking.status or "").strip().lower()
+        if normalized_status == "completed" and not booking.is_loyalty_discount:
+            completed_regular_since_last_discount += 1
+
+    has_cycle_discount_unlocked = completed_regular_since_last_discount >= LOYALTY_CYCLE_COMPLETED_BOOKINGS
+    next_booking_discounted = has_cycle_discount_unlocked and not has_active_discounted_booking
+    bookings_until_discount = 0 if has_cycle_discount_unlocked else (LOYALTY_CYCLE_COMPLETED_BOOKINGS - completed_regular_since_last_discount)
 
     return {
-        "completed_regular_bookings": int(completed_regular_bookings),
+        "completed_regular_bookings": int(completed_regular_since_last_discount),
         "loyalty_discounts_issued": int(loyalty_discounts_issued),
         "bookings_until_discount": int(bookings_until_discount),
         "next_booking_discounted": bool(next_booking_discounted),
