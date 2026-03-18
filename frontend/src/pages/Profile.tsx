@@ -1,9 +1,17 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import type { MeResponse } from '../api/auth';
-import { getMyReviews } from '../api/bookings';
+import { getLoyaltyStatus, getMyReviews } from '../api/bookings';
 import PageReveal from '../components/ui/PageReveal';
 import { normalizeImageUrl } from '../utils/image';
+
+interface LoyaltyStatus {
+  completed_regular_bookings: number;
+  loyalty_discounts_issued: number;
+  bookings_until_discount: number;
+  next_booking_discounted: boolean;
+  discount_percent: number;
+}
 
 interface ProfileProps {
   user: MeResponse | null;
@@ -36,6 +44,7 @@ const getInitial = (user: MeResponse | null) => {
 };
 
 const REVIEWS_PANEL_DURATION_MS = 420;
+const LOYALTY_CYCLE = 4;
 
 const Profile = ({ user }: ProfileProps) => {
   const navigate = useNavigate();
@@ -49,10 +58,18 @@ const Profile = ({ user }: ProfileProps) => {
   const [reviewsContentVisible, setReviewsContentVisible] = useState(false);
   const [reviewsPanelHeight, setReviewsPanelHeight] = useState(0);
   const reviewsContentRef = useRef<HTMLDivElement | null>(null);
+  const [loyaltyStatus, setLoyaltyStatus] = useState<LoyaltyStatus | null>(null);
 
   useEffect(() => {
     setAvatarError(false);
   }, [avatarSrc]);
+
+  useEffect(() => {
+    if (!user) return;
+    getLoyaltyStatus()
+      .then((data) => setLoyaltyStatus(data as LoyaltyStatus))
+      .catch((err) => console.error('Failed to load loyalty status', err));
+  }, [user]);
 
   useEffect(() => {
     if (!user) {
@@ -133,6 +150,50 @@ const Profile = ({ user }: ProfileProps) => {
         </PageReveal>
 
         <PageReveal delay={160}>
+          <div className="mt-5 rounded-3xl bg-white p-5 shadow-lg dark:bg-slate-800">
+            {loyaltyStatus?.next_booking_discounted ? (
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-emerald-100 dark:bg-emerald-900/40">
+                  <span className="text-2xl">🎁</span>
+                </div>
+                <div>
+                  <p className="font-semibold text-slate-800 dark:text-slate-100">20% Off — Ready to Use</p>
+                  <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-300">Your next booking gets a 20% loyalty discount</p>
+                </div>
+                <span className="ml-auto rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">ACTIVE</span>
+              </div>
+            ) : (
+              <>
+                <div className="mb-3 flex items-center justify-between">
+                  <div>
+                    <h2 className="text-base font-semibold text-slate-800 dark:text-slate-100">Loyalty Rewards</h2>
+                    <p className="text-sm text-slate-500 dark:text-slate-300">
+                      {loyaltyStatus
+                        ? `${loyaltyStatus.bookings_until_discount} more visit${loyaltyStatus.bookings_until_discount === 1 ? '' : 's'} until 20% off`
+                        : 'Loading…'}
+                    </p>
+                  </div>
+                  <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 dark:bg-slate-700 dark:text-slate-300">
+                    {loyaltyStatus ? `${LOYALTY_CYCLE - loyaltyStatus.bookings_until_discount} / ${LOYALTY_CYCLE}` : '— / —'}
+                  </span>
+                </div>
+                <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-700">
+                  <div
+                    className="h-2 rounded-full bg-cyan-500 transition-[width] duration-700 ease-out"
+                    style={{
+                      width: loyaltyStatus
+                        ? `${((LOYALTY_CYCLE - loyaltyStatus.bookings_until_discount) / LOYALTY_CYCLE) * 100}%`
+                        : '0%',
+                    }}
+                  />
+                </div>
+                <p className="mt-2 text-xs text-slate-400 dark:text-slate-500">Every 5th booking is 20% off. Complete 4 visits to unlock.</p>
+              </>
+            )}
+          </div>
+        </PageReveal>
+
+        <PageReveal delay={230}>
           <div className="mt-5 rounded-3xl bg-white p-5 shadow-lg dark:bg-slate-800">
             <button
               type="button"

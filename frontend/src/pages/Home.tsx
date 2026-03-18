@@ -10,6 +10,7 @@ interface Booking {
   start_time: string;
   end_time?: string;
   status: string;
+  is_loyalty_discount?: boolean;
 }
 
 interface UserReview {
@@ -236,6 +237,16 @@ const Home = () => {
       >
         {hero.description}
       </p>
+      {nextBooking?.is_loyalty_discount && (
+        <div
+          className={`mt-3 transition-all ease-out ${heroContentVisible ? 'translate-y-0 opacity-100' : 'translate-y-1 opacity-0'}`}
+          style={{ transitionDuration: `${HERO_TRANSITION_MS}ms`, transitionDelay: `${HERO_DESCRIPTION_DELAY_MS}ms` }}
+        >
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+            🎁 20% loyalty discount applied
+          </span>
+        </div>
+      )}
       <div
         className={`mt-4 flex gap-2 transition-all ease-out ${heroContentVisible ? 'translate-y-0 opacity-100' : 'translate-y-1 opacity-0'}`}
         style={{ transitionDuration: `${HERO_TRANSITION_MS}ms`, transitionDelay: `${HERO_ACTIONS_DELAY_MS}ms` }}
