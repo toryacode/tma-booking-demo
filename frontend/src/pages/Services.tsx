@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { getLoyaltyStatus } from '../api/bookings';
 import { getServices } from '../api/services';
 import PageReveal from '../components/ui/PageReveal';
 
@@ -16,6 +17,13 @@ const Services = () => {
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [nextBookingDiscounted, setNextBookingDiscounted] = useState(false);
+
+  useEffect(() => {
+    getLoyaltyStatus()
+      .then((data) => setNextBookingDiscounted(Boolean(data?.next_booking_discounted)))
+      .catch(() => setNextBookingDiscounted(false));
+  }, []);
 
   useEffect(() => {
     setLoading(true);
@@ -65,7 +73,15 @@ const Services = () => {
                   <p className="mt-2 text-slate-500 dark:text-slate-300">{service.description}</p>
                   <div className="mt-4 flex items-center justify-between text-sm text-slate-600 dark:text-slate-300">
                     <span>{service.duration} min</span>
-                    <span>${service.price.toFixed(2)}</span>
+                    {nextBookingDiscounted ? (
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-slate-400 line-through dark:text-slate-500">${service.price.toFixed(2)}</span>
+                        <span className="font-semibold text-emerald-600 dark:text-emerald-400">${(service.price * 0.8).toFixed(2)}</span>
+                        <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">20% OFF</span>
+                      </div>
+                    ) : (
+                      <span>${service.price.toFixed(2)}</span>
+                    )}
                   </div>
                   <Link to={`/employees?service=${service.id}`} className="mt-4 inline-block w-full rounded-2xl bg-blue-600 px-4 py-2 text-center font-semibold text-white transition hover:bg-blue-700">
                     Book this service

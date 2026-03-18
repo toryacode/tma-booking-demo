@@ -237,16 +237,6 @@ const Home = () => {
       >
         {hero.description}
       </p>
-      {nextBooking?.is_loyalty_discount && (
-        <div
-          className={`mt-3 transition-all ease-out ${heroContentVisible ? 'translate-y-0 opacity-100' : 'translate-y-1 opacity-0'}`}
-          style={{ transitionDuration: `${HERO_TRANSITION_MS}ms`, transitionDelay: `${HERO_DESCRIPTION_DELAY_MS}ms` }}
-        >
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
-            🎁 20% loyalty discount applied
-          </span>
-        </div>
-      )}
       <div
         className={`mt-4 flex gap-2 transition-all ease-out ${heroContentVisible ? 'translate-y-0 opacity-100' : 'translate-y-1 opacity-0'}`}
         style={{ transitionDuration: `${HERO_TRANSITION_MS}ms`, transitionDelay: `${HERO_ACTIONS_DELAY_MS}ms` }}
@@ -292,6 +282,22 @@ const Home = () => {
               </div>
             </div>
           </PageReveal>
+
+          {nextBooking?.is_loyalty_discount && (
+            <PageReveal delay={120}>
+              <div className="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-800/50 dark:bg-emerald-950/30">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-100 dark:bg-emerald-900/50">
+                    <span className="text-xl">🎁</span>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-emerald-800 dark:text-emerald-200">20% Loyalty Discount Active</p>
+                    <p className="text-sm text-emerald-700/80 dark:text-emerald-300/80">Your upcoming booking has a 20% loyalty discount applied.</p>
+                  </div>
+                </div>
+              </div>
+            </PageReveal>
+          )}
 
           <PageReveal delay={160}>
             <div className="space-y-3">

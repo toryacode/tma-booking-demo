@@ -240,20 +240,31 @@ const BookingDetails = () => {
               </div>
             </div>
 
-            <div className="mt-5 rounded-2xl border border-slate-200 p-4 dark:border-slate-700">
-              <p className="text-sm text-slate-600 dark:text-slate-300">
-                Duration: <span className="font-semibold text-slate-800 dark:text-slate-100">{booking.service?.duration || 0} min</span>
-              </p>
+            <div className="mt-5 space-y-2 rounded-2xl border border-slate-200 p-4 dark:border-slate-700">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-slate-500 dark:text-slate-400">Duration</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-100">{booking.service?.duration || 0} min</span>
+              </div>
               {booking.discount_percent && booking.discount_percent > 0 ? (
-                <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
-                  <span className="text-slate-400 line-through dark:text-slate-500">${(booking.original_price ?? booking.service?.price ?? 0).toFixed(2)}</span>
-                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">${(booking.final_price ?? booking.service?.price ?? 0).toFixed(2)}</span>
-                  <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">{booking.discount_percent}% OFF</span>
-                </div>
+                <>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-slate-500 dark:text-slate-400">Full price</span>
+                    <span className="text-slate-400 line-through dark:text-slate-500">${(booking.original_price ?? booking.service?.price ?? 0).toFixed(2)}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-slate-500 dark:text-slate-400">Discount</span>
+                    <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">{booking.discount_percent}% loyalty discount</span>
+                  </div>
+                  <div className="flex items-center justify-between border-t border-slate-200 pt-2 text-sm dark:border-slate-600">
+                    <span className="font-semibold text-slate-700 dark:text-slate-200">Total</span>
+                    <span className="font-bold text-emerald-600 dark:text-emerald-400">${(booking.final_price ?? booking.service?.price ?? 0).toFixed(2)}</span>
+                  </div>
+                </>
               ) : (
-                <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-                  Full Price: <span className="font-semibold text-slate-800 dark:text-slate-100">${(booking.final_price ?? booking.service?.price ?? 0).toFixed(2)}</span>
-                </p>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-slate-500 dark:text-slate-400">Price</span>
+                  <span className="font-semibold text-slate-800 dark:text-slate-100">${(booking.final_price ?? booking.service?.price ?? 0).toFixed(2)}</span>
+                </div>
               )}
             </div>
 
