@@ -47,12 +47,6 @@ function AppRouter() {
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   });
   const themeSwitchTimerRef = useRef<number | null>(null);
-  const themeMaskHideTimerRef = useRef<number | null>(null);
-  const themeSwitchFrameRef = useRef<number | null>(null);
-  const themeMaskFadeFrameRef = useRef<number | null>(null);
-  const [themeMaskVisible, setThemeMaskVisible] = useState(false);
-  const [themeMaskFading, setThemeMaskFading] = useState(false);
-  const [themeMaskTheme, setThemeMaskTheme] = useState<'light' | 'dark'>(theme);
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark');
@@ -64,16 +58,40 @@ function AppRouter() {
       if (themeSwitchTimerRef.current !== null) {
         window.clearTimeout(themeSwitchTimerRef.current);
       }
-      if (themeMaskHideTimerRef.current !== null) {
-        window.clearTimeout(themeMaskHideTimerRef.current);
-      }
-      if (themeSwitchFrameRef.current !== null) {
-        window.cancelAnimationFrame(themeSwitchFrameRef.current);
-      }
-      if (themeMaskFadeFrameRef.current !== null) {
-        window.cancelAnimationFrame(themeMaskFadeFrameRef.current);
-      }
       document.documentElement.classList.remove('theme-switching');
+    };
+  }, []);
+
+  useEffect(() => {
+    const scrollEditableIntoView = (target: EventTarget | null) => {
+      if (!(target instanceof HTMLElement)) {
+        return;
+      }
+
+      const isEditable = target.matches('input, textarea, [contenteditable="true"]');
+      if (!isEditable) {
+        return;
+      }
+
+      window.setTimeout(() => {
+        target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+      }, 140);
+    };
+
+    const handleFocusIn = (event: FocusEvent) => {
+      scrollEditableIntoView(event.target);
+    };
+
+    const handleViewportResize = () => {
+      scrollEditableIntoView(document.activeElement);
+    };
+
+    document.addEventListener('focusin', handleFocusIn);
+    window.visualViewport?.addEventListener('resize', handleViewportResize);
+
+    return () => {
+      document.removeEventListener('focusin', handleFocusIn);
+      window.visualViewport?.removeEventListener('resize', handleViewportResize);
     };
   }, []);
 
@@ -208,23 +226,6 @@ function AppRouter() {
     root.classList.add('theme-switching');
     const nextTheme: 'light' | 'dark' = theme === 'dark' ? 'light' : 'dark';
 
-    if (themeSwitchTimerRef.current !== null) {
-      window.clearTimeout(themeSwitchTimerRef.current);
-    }
-    if (themeMaskHideTimerRef.current !== null) {
-      window.clearTimeout(themeMaskHideTimerRef.current);
-    }
-    if (themeSwitchFrameRef.current !== null) {
-      window.cancelAnimationFrame(themeSwitchFrameRef.current);
-    }
-    if (themeMaskFadeFrameRef.current !== null) {
-      window.cancelAnimationFrame(themeMaskFadeFrameRef.current);
-    }
-
-    setThemeMaskTheme(theme);
-    setThemeMaskVisible(true);
-    setThemeMaskFading(false);
-
     const setNextTheme = () => {
       setTheme(nextTheme);
     };
@@ -238,17 +239,9 @@ function AppRouter() {
       setNextTheme();
     }
 
-    themeSwitchFrameRef.current = window.requestAnimationFrame(() => {
-      themeMaskFadeFrameRef.current = window.requestAnimationFrame(() => {
-        setThemeMaskFading(true);
-      });
-    });
-
-    themeMaskHideTimerRef.current = window.setTimeout(() => {
-      setThemeMaskVisible(false);
-      setThemeMaskFading(false);
-      themeMaskHideTimerRef.current = null;
-    }, THEME_SWITCH_DURATION_MS + 80);
+    if (themeSwitchTimerRef.current !== null) {
+      window.clearTimeout(themeSwitchTimerRef.current);
+    }
 
     themeSwitchTimerRef.current = window.setTimeout(() => {
       root.classList.remove('theme-switching');
@@ -388,13 +381,6 @@ function AppRouter() {
             <p className="mt-2 text-sm text-slate-500 dark:text-slate-300">Authorizing account and preparing your bookings...</p>
           </div>
         </div>
-      )}
-
-      {themeMaskVisible && !showAuthOverlay && (
-        <div
-          className={`pointer-events-none fixed inset-0 z-40 bg-gradient-to-b transition-opacity duration-[540ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${themeMaskTheme === 'dark' ? 'from-slate-950 to-slate-900' : 'from-slate-100 to-white'} ${themeMaskFading ? 'opacity-0' : 'opacity-100'}`}
-          aria-hidden="true"
-        />
       )}
     </div>
   );
