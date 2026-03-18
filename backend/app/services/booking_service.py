@@ -27,6 +27,7 @@ def get_user_loyalty_status(db: Session, user_id: str):
     loyalty_discounts_issued = db.query(func.count(Booking.id)).filter(
         Booking.user_id == user_id,
         Booking.is_loyalty_discount.is_(True),
+        Booking.status.notin_(["cancelled", "canceled"]),
     ).scalar() or 0
 
     next_threshold = (loyalty_discounts_issued + 1) * LOYALTY_CYCLE_COMPLETED_BOOKINGS
