@@ -73,7 +73,9 @@ function AppRouter() {
         return;
       }
 
-      target.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'nearest' });
+      window.setTimeout(() => {
+        target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+      }, 140);
     };
 
     const handleFocusIn = (event: FocusEvent) => {
@@ -81,11 +83,7 @@ function AppRouter() {
     };
 
     const handleViewportResize = () => {
-      const active = document.activeElement;
-      scrollEditableIntoView(active);
-      window.requestAnimationFrame(() => {
-        scrollEditableIntoView(active);
-      });
+      scrollEditableIntoView(document.activeElement);
     };
 
     document.addEventListener('focusin', handleFocusIn);
