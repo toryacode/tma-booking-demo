@@ -157,7 +157,7 @@ const Profile = ({ user }: ProfileProps) => {
                   <span className="text-2xl">🎁</span>
                 </div>
                 <div>
-                  <p className="font-semibold text-slate-800 dark:text-slate-100">20% Off — Ready to Use</p>
+                  <p className="font-semibold text-slate-800 dark:text-slate-100">Ready to Use</p>
                   <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-300">Your next booking gets a 20% loyalty discount</p>
                 </div>
                 <span className="ml-auto rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">ACTIVE</span>
