@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { cancelBooking, getBookingReview, getMyBookings, submitBookingReview } from '../api/bookings';
 import BookingStatusChip from '../components/booking/BookingStatusChip';
@@ -56,8 +56,6 @@ const BookingDetails = () => {
   const [reviewError, setReviewError] = useState('');
   const [existingReview, setExistingReview] = useState<BookingReviewData | null>(null);
   const [reviewEditing, setReviewEditing] = useState(false);
-  const [reviewFieldFocused, setReviewFieldFocused] = useState(false);
-  const reviewTextareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
     if (booking) {
@@ -369,11 +367,8 @@ const BookingDetails = () => {
                 {selectedRating > 0 && (!existingReview || reviewEditing) && (
                   <div className="mt-4">
                     <textarea
-                      ref={reviewTextareaRef}
                       value={reviewText}
                       onChange={(e) => setReviewText(e.target.value)}
-                      onFocus={() => setReviewFieldFocused(true)}
-                      onBlur={() => setReviewFieldFocused(false)}
                       rows={3}
                       placeholder="Optional: share your experience"
                       enterKeyHint="done"
@@ -381,15 +376,6 @@ const BookingDetails = () => {
                       style={{ scrollMarginBottom: '45vh' }}
                       className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-blue-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
                     />
-                    {reviewFieldFocused && (
-                      <button
-                        type="button"
-                        onClick={() => reviewTextareaRef.current?.blur()}
-                        className="mt-2 rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-                      >
-                        Done
-                      </button>
-                    )}
                     <button
                       type="button"
                       onClick={handleSubmitReview}
