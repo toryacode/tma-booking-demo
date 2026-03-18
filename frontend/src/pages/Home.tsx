@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { getMyBookings, getMyReviews } from '../api/bookings';
+import { getLoyaltyStatus, getMyBookings, getMyReviews } from '../api/bookings';
 import PageReveal from '../components/ui/PageReveal';
 
 interface Booking {
@@ -16,6 +16,10 @@ interface Booking {
 interface UserReview {
   booking_id?: number;
   booking?: { id?: number };
+}
+
+interface LoyaltyStatus {
+  next_booking_discounted: boolean;
 }
 
 const normalizeStatus = (status: string) => status.trim().toLowerCase().replace(' ', '_');
@@ -54,6 +58,7 @@ const Home = () => {
   const [lastCompletedBooking, setLastCompletedBooking] = useState<Booking | null>(null);
   const [lastCompletedNeedsReview, setLastCompletedNeedsReview] = useState(false);
   const [completedCount, setCompletedCount] = useState(0);
+  const [nextBookingDiscounted, setNextBookingDiscounted] = useState(false);
   const [heroLoading, setHeroLoading] = useState(true);
   const [heroContentVisible, setHeroContentVisible] = useState(false);
   const [heroHeight, setHeroHeight] = useState(176);
@@ -64,9 +69,10 @@ const Home = () => {
     const loadUpcomingBooking = async () => {
       setHeroLoading(true);
       try {
-        const [bookings, reviews] = await Promise.all([
+        const [bookings, reviews, loyaltyStatus] = await Promise.all([
           getMyBookings() as Promise<Booking[]>,
           getMyReviews() as Promise<UserReview[]>,
+          getLoyaltyStatus() as Promise<LoyaltyStatus>,
         ]);
         const now = new Date();
         const upcoming = bookings
@@ -100,11 +106,13 @@ const Home = () => {
         setLastCompletedBooking(lastCompletedBooking);
         setLastCompletedNeedsReview(!upcoming && shouldRateLastCompleted);
         setCompletedCount(totalCompletedCount);
+        setNextBookingDiscounted(Boolean(loyaltyStatus?.next_booking_discounted));
       } catch {
         setNextBooking(null);
         setLastCompletedBooking(null);
         setLastCompletedNeedsReview(false);
         setCompletedCount(0);
+        setNextBookingDiscounted(false);
       } finally {
         setHeroLoading(false);
       }
@@ -283,7 +291,7 @@ const Home = () => {
             </div>
           </PageReveal>
 
-          {nextBooking?.is_loyalty_discount && (
+          {nextBookingDiscounted && (
             <PageReveal delay={120}>
               <div className="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-800/50 dark:bg-emerald-950/30">
                 <div className="flex items-center gap-3">
