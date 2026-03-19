@@ -97,6 +97,7 @@ function AppRouter() {
 
   useEffect(() => {
     const webApp = window.Telegram?.WebApp;
+    const webAppWithSwipeControl = webApp as (typeof webApp & { disableVerticalSwipes?: () => void }) | undefined;
     if (webApp?.ready) {
       webApp.ready();
     }
@@ -106,6 +107,14 @@ function AppRouter() {
         webApp.expand();
       } catch (err) {
         console.warn('Full-size expand failed', err);
+      }
+    }
+
+    if (webAppWithSwipeControl?.disableVerticalSwipes) {
+      try {
+        webAppWithSwipeControl.disableVerticalSwipes();
+      } catch (err) {
+        console.warn('Disabling vertical swipes failed', err);
       }
     }
 
@@ -211,6 +220,10 @@ function AppRouter() {
 
     navigate(`/bookings/${bookingId}`, { replace: true });
   }, [location.search, navigate]);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, [location.pathname]);
 
   const avatarSrc = currentUser?.photo_url;
   const normalizedAvatarSrc = normalizeImageUrl(avatarSrc);
